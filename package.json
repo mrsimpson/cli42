@@ -1,0 +1,57 @@
+{
+  "name": "@cli42/lib",
+  "version": "0.1.0",
+  "description": "Shared building blocks of the *42 documentation CLIs (arc42, biz42): semantic workspace diff, Git snapshots and history, word-level text diff.",
+  "keywords": [
+    "arc42",
+    "biz42",
+    "cli",
+    "diff",
+    "git"
+  ],
+  "homepage": "https://github.com/mrsimpson/cli42",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrsimpson/cli42.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    "./diff": {
+      "types": "./dist/diff/index.d.mts",
+      "default": "./dist/diff/index.mjs"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.mts",
+      "default": "./dist/git/index.mjs"
+    },
+    "./text-diff": {
+      "types": "./dist/text-diff/index.d.mts",
+      "default": "./dist/text-diff/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "prepare": "vp pack",
+    "test": "vp test",
+    "check": "vp check",
+    "ready": "pnpm run check && pnpm run test && pnpm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "typescript": "^5",
+    "vite-plus": "0.1.24"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "packageManager": "pnpm@10.32.1"
+}
