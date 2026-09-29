@@ -91,6 +91,10 @@ schemas, rules and texts.
 - Later, out of scope for now: the CLI shell (about half of `cli.ts` is shared: command routing,
   validate/get/rules/diff/serve/build/history, text/markdown/JSON renderers) and the React diff and
   history components (`DiffSegment`, `ChangesView`, `HistoryChain`, CSS modules).
+- Linking the local cli42 working copy (`link:` override) bundles Mermaid twice into the web app
+  (the link brings its own `node_modules/mermaid`), which slows the Playwright suite enough to
+  expose two tests of arc42's web package that share port 3399. With the Git pin the lib's peer
+  `mermaid` resolves to the consumer's copy; verify bundle size and Playwright in the pinned state.
 - Local verification of Playwright suites: the preinstalled headless shell (build 1194) is older than
   Playwright 1.63 expects (1243); point `PLAYWRIGHT_BROWSERS_PATH` at a scratch directory whose
   `chromium_headless_shell-1243/chrome-headless-shell-linux64/` links to the installed build.
@@ -118,7 +122,7 @@ schemas, rules and texts.
 - [x] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
 - [x] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
 - [x] Phase 4: parser, AST and notation adapters (arc42's parser as base).
-- [ ] Phase 5: generic rule factories and `explain`.
+- [x] Phase 5: generic rule factories and `explain`.
 - [ ] Phase 6 (biz42 only, separate commits): adopt the arc42 way.
 
 ### Design
@@ -169,7 +173,7 @@ schemas, rules and texts.
   messages, message mappers.
 - [x] Phase 3: resolver from `crossRefs`.
 - [x] Phase 4: parser, AST, notation adapters (arc42; biz42 switches in phase 6).
-- [ ] Phase 5: generic rule factories, `explain`.
+- [x] Phase 5: generic rule factories, `explain`.
 - [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only):
   the shared Markdown parser (one `biz42` fence, `:::diagram` only inside it, any source fence,
   diagram without source kept), notation adapter with prose rendered in core (async pipeline),
@@ -180,6 +184,15 @@ schemas, rules and texts.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 5: `@cli42/lib/rules` — factories for the structural rules every language has
+  (duplicate id, parse error, unknown attribute, block without prose, several blocks under one
+  heading, bare Mermaid, element in the wrong chapter with an injected chapter map and file → chapter
+  function); each takes the language's rule metadata. `@cli42/lib/explain` — `blockGuidance` from a
+  schema, `formatBlockGuidance` (arc42's layout), `ignoreGuidance` from a few language facts,
+  `formatIgnoreGuidance`. Findings are directive; biz42's E004 and W009 now use the shared wording.
+  biz42 keeps its own `explain` text layout until phase 6. Verified: build, check, unit tests,
+  Playwright (in the pinned state, see Notes), CLI output identical except the new message tails,
+  explain output of every topic identical in both CLIs (except arc42's known deployment-node order).
 - [x] Phase 4: `@cli42/lib/parser` is arc42's Markdown parser, generalised by a dialect (fence info
   strings, the block's fence-flag name, a diagram-node factory receiving the raw `:::diagram`
   attributes); `@cli42/lib/notation` holds `NotationAdapter<N, Doc>`, `Parser<Doc>`,

@@ -24,6 +24,10 @@
       "types": "./dist/diff/index.d.mts",
       "default": "./dist/diff/index.mjs"
     },
+    "./explain": {
+      "types": "./dist/explain/index.d.mts",
+      "default": "./dist/explain/index.mjs"
+    },
     "./git": {
       "types": "./dist/git/index.d.mts",
       "default": "./dist/git/index.mjs"
@@ -43,6 +47,10 @@
     "./parser": {
       "types": "./dist/parser/index.d.mts",
       "default": "./dist/parser/index.mjs"
+    },
+    "./rules": {
+      "types": "./dist/rules/index.d.mts",
+      "default": "./dist/rules/index.mjs"
     },
     "./schema": {
       "types": "./dist/schema/index.d.mts",
