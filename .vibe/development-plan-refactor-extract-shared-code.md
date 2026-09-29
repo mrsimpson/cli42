@@ -80,8 +80,9 @@ schemas, rules and texts.
 - arc42 parses asynchronously (AsciiDoc, prose rendering), biz42 synchronously; the arc42 way makes
   the lib pipeline async. biz42 renders prose and commit messages in the browser; the arc42 way
   renders them in core/on the server.
-- Rule docs use `arc42Chapter` / `biz42Chapter`; the lib uses `chapter`, mapped back so
-  `arc42 rules --format json` output is unchanged.
+- Rule docs use `arc42Chapter` / `biz42Chapter`. Instead of renaming them, the lib's `RuleMeta` and
+  `Rule` are generic over the docs type: each language extends the lib's `RuleDocs` with its own
+  chapter field, so `rules --format json` output and all rule files stay unchanged.
 - Later, out of scope for now: the CLI shell (about half of `cli.ts` is shared: command routing,
   validate/get/rules/diff/serve/build/history, text/markdown/JSON renderers) and the React diff and
   history components (`DiffSegment`, `ChangesView`, `HistoryChain`, CSS modules).
@@ -108,7 +109,7 @@ schemas, rules and texts.
 - [x] Phase 0 (done): extract diff, Git and text diff; consumers keep wrappers.
 - [x] Agree on the language-definition approach, arc42 way, coverage staying in arc42, Zod as a
   regular re-exported dependency, directive messages with message mappers, test policy.
-- [ ] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
+- [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
 - [ ] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
 - [ ] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
 - [ ] Phase 4: parser, AST and notation adapters (arc42's parser as base).
@@ -158,7 +159,7 @@ schemas, rules and texts.
 - [x] Phase 0: arc42-language core, workspace-fs and web use the lib; CLI bundles it.
 - [x] Phase 0: biz42 core, workspace-fs and web use the lib; CLI bundles it.
 - [x] Phase 0: Git dependency pinned to cli42 commit `185a24c`, `onlyBuiltDependencies`.
-- [ ] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
+- [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
 - [ ] Phase 2: Zod re-export (consumers drop `zod`), schema-derived types, builder, directive
   messages, message mappers.
 - [ ] Phase 3: resolver from `crossRefs`.
@@ -166,8 +167,19 @@ schemas, rules and texts.
 - [ ] Phase 5: generic rule factories, `explain`.
 - [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only).
 - [ ] After each phase: re-pin the consumers to the new cli42 commit.
+- [ ] After each phase: compare CLI output (validate/get/diff/rules/explain on docs and examples)
+  with the pre-phase build; keep each repo's own architecture docs (`docs/arc42`) accurate.
+- [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 1: `@cli42/lib/validator` (`createValidator`, `applyIgnoreDirectives`, generic `Rule`,
+  `SyntaxCheck`) and `@cli42/lib/mermaid` (`createMermaidParser` with a notation → grammar map,
+  `mermaidSyntaxCheck` with per-diagram targets and suppression). arc42 keeps `@arc42/mermaid` as a
+  thin wrapper (its tests import it); biz42's `@biz42/mermaid` package is gone, `core/src/mermaid.ts`
+  maps its notations. biz42's Mermaid check now has arc42's Node fallbacks (unquoted edge labels;
+  SIPOC/turtle/strategy maps checked as flowcharts). Verified: build, check, unit tests, Playwright,
+  and byte-identical CLI output (validate/get/diff/rules/explain on docs and examples) against the
+  pre-phase build.
 - [x] Phase 0 verified on a clean install with frozen lockfile in both consumers: build, check,
   unit tests (arc42 496, biz42 88 root + 62 core + 17 workspace-fs) and Playwright (arc42 72,
   biz42 62) green; no test file changed; arc42 −1,401/+122 lines, biz42 −1,362/+120 lines.

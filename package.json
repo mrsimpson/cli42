@@ -1,7 +1,7 @@
 {
   "name": "@cli42/lib",
   "version": "0.1.0",
-  "description": "Shared building blocks of the *42 documentation CLIs (arc42, biz42): semantic workspace diff, Git snapshots and history, word-level text diff.",
+  "description": "Shared building blocks of the *42 documentation CLIs (arc42, biz42): semantic workspace diff, Git snapshots and history, validation engine, Mermaid syntax boundary, word-level text diff.",
   "keywords": [
     "arc42",
     "biz42",
@@ -28,9 +28,17 @@
       "types": "./dist/git/index.d.mts",
       "default": "./dist/git/index.mjs"
     },
+    "./mermaid": {
+      "types": "./dist/mermaid/index.d.mts",
+      "default": "./dist/mermaid/index.mjs"
+    },
     "./text-diff": {
       "types": "./dist/text-diff/index.d.mts",
       "default": "./dist/text-diff/index.mjs"
+    },
+    "./validator": {
+      "types": "./dist/validator/index.d.mts",
+      "default": "./dist/validator/index.mjs"
     },
     "./package.json": "./package.json"
   },
@@ -47,8 +55,12 @@
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
+    "mermaid": "11.17.2",
     "typescript": "^5",
     "vite-plus": "0.1.24"
+  },
+  "peerDependencies": {
+    "mermaid": "^11"
   },
   "engines": {
     "node": ">=22.6"
