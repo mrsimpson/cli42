@@ -174,10 +174,12 @@ schemas, rules and texts.
 - [x] Phase 3: resolver from `crossRefs`.
 - [x] Phase 4: parser, AST, notation adapters (arc42; biz42 switches in phase 6).
 - [x] Phase 5: generic rule factories, `explain`.
-- [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only):
-  the shared Markdown parser (one `biz42` fence, `:::diagram` only inside it, any source fence,
-  diagram without source kept), notation adapter with prose rendered in core (async pipeline),
-  E017, W016, diagram kinds with their own syntax codes.
+- [x] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only):
+  the shared Markdown parser, explain layout, E017/W016, syntax codes per diagram kind, prose
+  handling of the builder.
+- [ ] Open (user decision): biz42's notation adapter with prose rendered in core and an async
+  pipeline. biz42's web app renders prose, marked prose changes and commit messages in the browser,
+  so this rewrites its rendering paths — natural to do together with sharing the web components.
 - [ ] After each phase: re-pin the consumers to the new cli42 commit.
 - [ ] After each phase: compare CLI output (validate/get/diff/rules/explain on docs and examples)
   with the pre-phase build; keep each repo's own architecture docs (`docs/arc42`) accurate.
@@ -187,6 +189,10 @@ schemas, rules and texts.
 - [x] Phase 6a (biz42): shared Markdown parser with the biz42 dialect; one ```biz42 fence,
   `:::diagram` only inside it; examples, the scope starter template and `explain diagram bmc`
   fence their diagram blocks. No test changed.
+- [x] Phase 6e (biz42): `biz42 validate` runs the Mermaid syntax check (it never did); syntax errors
+  under the diagram kind's rule (E012 SIPOC, E013 turtle, E014 strategy map, E010 plain Mermaid).
+- [x] Phase 6f (biz42): diagrams no longer end the prose of the next block (arc42's builder
+  behavior); the lib's `proseConsumedBy` option is gone.
 - [x] Phase 6c (biz42): E017 (block outside any section) and W016 (block outside the ```biz42
   fence) as shared rule factories; biz42's diff refuses preamble blocks (E017) like arc42's — its
   preamble test now asserts the refusal.

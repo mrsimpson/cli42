@@ -37,11 +37,6 @@ export interface BuildOptions<S extends Readonly<Record<string, z.ZodType>>, N, 
   elements: S;
   /** Build a diagram from its `:::diagram` node; undefined skips it. */
   diagram?: (node: N, context: DiagramContext) => DiagramResult<D> | undefined;
-  /**
-   * Node kinds, besides blocks, that consume the prose before them, so the
-   * next block's `loc.prose` starts after them.
-   */
-  proseConsumedBy?: ReadonlyArray<"diagram" | "bare-mermaid">;
   /** Attributes whose empty value is kept (and validated) rather than treated as absent. */
   keepEmpty?: readonly string[];
   /** Reword the default messages. */
@@ -72,7 +67,6 @@ export function buildWorkspace<
   const ignoreDirectives: IgnoreDirective[] = [];
   const message = (issue: BuildIssue) =>
     options.messages ? options.messages(issue, defaultMessage(issue)) : defaultMessage(issue);
-  const consumes = new Set(options.proseConsumedBy ?? []);
   const keepEmpty = new Set(options.keepEmpty ?? []);
   const blockTypes = Object.keys(options.elements);
 
@@ -121,12 +115,7 @@ export function buildWorkspace<
           });
         } else if (result) {
           diagrams.push(result.diagram);
-          if (consumes.has("diagram")) pendingProse = [];
         }
-        continue;
-      }
-      if (node.kind === "bare-mermaid") {
-        if (consumes.has("bare-mermaid")) pendingProse = [];
         continue;
       }
       if (node.kind !== "block") continue;
