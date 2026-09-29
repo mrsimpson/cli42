@@ -72,6 +72,10 @@
       "types": "./dist/validator/index.d.mts",
       "default": "./dist/validator/index.mjs"
     },
+    "./vite": {
+      "types": "./dist/vite/index.d.mts",
+      "default": "./dist/vite/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -86,11 +90,11 @@
     "ready": "pnpm run check && pnpm run test && pnpm run build"
   },
   "dependencies": {
+    "@asciidoctor/core": "^4.1.0",
     "marked": "^14.1.4",
     "zod": "4.5.4"
   },
   "devDependencies": {
-    "@asciidoctor/core": "^4.1.0",
     "@semantic-release/changelog": "7.0.0",
     "@semantic-release/exec": "7.1.0",
     "@semantic-release/github": "12.0.9",
@@ -101,13 +105,7 @@
     "vite-plus": "0.1.24"
   },
   "peerDependencies": {
-    "@asciidoctor/core": "^4.1.0",
     "mermaid": "^11"
-  },
-  "peerDependenciesMeta": {
-    "@asciidoctor/core": {
-      "optional": true
-    }
   },
   "engines": {
     "node": ">=22.6"

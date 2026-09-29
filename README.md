@@ -16,7 +16,7 @@ Published as the npm package **`@cli42/lib`**, one subpath per concern:
 | `@cli42/lib/parser`    | Node, browser | One notation-independent core (headings, prose, `:::blocks`, `:::ignore`, `:::diagram` + source fence, bare Mermaid), configured by a dialect; Markdown and AsciiDoc tokenizers |
 | `@cli42/lib/notation`  | Node, browser | `NotationAdapter`, `ProseRenderer`, `renderProseNodes`, `parseDocumentAsync` (parse, then render prose), `detectNotation`                                                       |
 | `@cli42/lib/markdown`  | Node, browser | The Markdown prose renderer (`MarkdownProseRenderer`, `renderMarkdown`, backed by marked) — prose is rendered once, in the backend                                              |
-| `@cli42/lib/asciidoc`  | Node, browser | The AsciiDoc prose renderer (`AsciidocProseRenderer`); `@asciidoctor/core` is an optional peer dependency                                                                       |
+| `@cli42/lib/asciidoc`  | Node, browser | The AsciiDoc prose renderer (`AsciidocProseRenderer`); loads `@asciidoctor/core` only where imported                                                                            |
 | `@cli42/lib/schema`    | Node, browser | Zod (re-exported, one version for all languages), list schemas, `CrossRefMeta`, schema introspection                                                                            |
 | `@cli42/lib/model`     | Node, browser | `ElementOf<S>` (element types from the schemas), `buildWorkspace` with directive build messages, `buildIndex` from the schemas' cross-references                                |
 | `@cli42/lib/validator` | Node, browser | Rule and diagnostic types, `createValidator` (rules, syntax check, ignore directives), `GENERIC_CODES`                                                                          |
@@ -26,6 +26,7 @@ Published as the npm package **`@cli42/lib`**, one subpath per concern:
 | `@cli42/lib/diff`      | Node, browser | Semantic diff of two workspace snapshots (`diffWorkspaces`), its render-ready view (`buildDiffView`), block/prose consistency findings, change counts                           |
 | `@cli42/lib/git`       | Node          | The two snapshots a `git diff`-style spec compares (`resolveComparison`), changed and untracked files, the files and blobs of a commit, the history of a workspace's documents  |
 | `@cli42/lib/text-diff` | Node, browser | Word-level token diff and `<ins>`/`<del>` marking of rendered HTML                                                                                                              |
+| `@cli42/lib/vite`      | Node (build)  | `asciidoctorBrowserPaths`: keeps Vite from emitting unused copies of Asciidoctor's browser build                                                                                |
 
 ## Generic rule codes
 

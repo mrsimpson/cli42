@@ -1,6 +1,6 @@
-// The AsciiDoc notation's prose renderer. `@asciidoctor/core` is an optional
-// peer dependency: only languages that read AsciiDoc install it, and bundlers
-// resolve it to its browser build.
+// The AsciiDoc notation's prose renderer, behind its own subpath so
+// Asciidoctor (~1 MB) is loaded only where imported. Bundlers resolve
+// @asciidoctor/core to its browser build.
 import { load } from "@asciidoctor/core";
 import type { ProseRenderer } from "../notation/prose-renderer.ts";
 

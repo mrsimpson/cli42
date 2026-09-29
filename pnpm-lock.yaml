@@ -12,6 +12,9 @@ importers:
 
   .:
     dependencies:
+      '@asciidoctor/core':
+        specifier: ^4.1.0
+        version: 4.1.0
       marked:
         specifier: ^14.1.4
         version: 14.1.4
@@ -19,9 +22,6 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
     devDependencies:
-      '@asciidoctor/core':
-        specifier: ^4.1.0
-        version: 4.1.0
       '@semantic-release/changelog':
         specifier: 7.0.0
         version: 7.0.0(semantic-release@25.0.9(typescript@5.9.3))
