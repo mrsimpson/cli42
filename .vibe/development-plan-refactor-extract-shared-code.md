@@ -69,7 +69,10 @@ schemas, rules and texts.
   diagram rules (E010, E012–E014, H015–H022, W019–W028), coverage (H014, H020, H021, E011, W012,
   W018), AsciiDoc parser (may move later); biz42's SIPOC, turtle, strategy-map and BMC rules.
 - The two Markdown parsers have drifted: biz42 accepts an `arc42` fence and a yaml fence for BMC,
-  its state machine differs. Port arc42's parser as the base; biz42's tests prove parity.
+  recognises `:::diagram` outside any fence, starts a diagram's source only at a `mermaid`/`yaml`
+  fence (other lines in between are skipped), treats only exact ```mermaid as a bare fence, checks
+  source fences before open blocks, and drops a `:::diagram` without source at the end of a file.
+  arc42's parser is the base; switching biz42 is a behavior change and part of phase 6.
 - The resolvers are long if-chains per element kind, while both schema sets already declare
   `crossRefs` metadata (`field`, `targetKind`, `cardinality`). Adding `relation` and `direction`
   lets the lib derive the edges (e.g. arc42's `interface.provider` is a reversed `provides` edge).
@@ -114,7 +117,7 @@ schemas, rules and texts.
 - [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
 - [x] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
 - [x] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
-- [ ] Phase 4: parser, AST and notation adapters (arc42's parser as base).
+- [x] Phase 4: parser, AST and notation adapters (arc42's parser as base).
 - [ ] Phase 5: generic rule factories and `explain`.
 - [ ] Phase 6 (biz42 only, separate commits): adopt the arc42 way.
 
@@ -165,15 +168,27 @@ schemas, rules and texts.
 - [x] Phase 2: Zod re-export (consumers drop `zod`), schema-derived types, builder, directive
   messages, message mappers.
 - [x] Phase 3: resolver from `crossRefs`.
-- [ ] Phase 4: parser, AST, notation adapters.
+- [x] Phase 4: parser, AST, notation adapters (arc42; biz42 switches in phase 6).
 - [ ] Phase 5: generic rule factories, `explain`.
-- [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only).
+- [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only):
+  the shared Markdown parser (one `biz42` fence, `:::diagram` only inside it, any source fence,
+  diagram without source kept), notation adapter with prose rendered in core (async pipeline),
+  E017, W016, diagram kinds with their own syntax codes.
 - [ ] After each phase: re-pin the consumers to the new cli42 commit.
 - [ ] After each phase: compare CLI output (validate/get/diff/rules/explain on docs and examples)
   with the pre-phase build; keep each repo's own architecture docs (`docs/arc42`) accurate.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 4: `@cli42/lib/parser` is arc42's Markdown parser, generalised by a dialect (fence info
+  strings, the block's fence-flag name, a diagram-node factory receiving the raw `:::diagram`
+  attributes); `@cli42/lib/notation` holds `NotationAdapter<N, Doc>`, `Parser<Doc>`,
+  `ProseRenderer`, `renderProseNodes` and `detectNotation`. arc42's AST reuses the shared node types;
+  its diagram-node factory is shared by its Markdown and AsciiDoc parsers (the AsciiDoc parser stays
+  in arc42). The unclosed-block message is directive ("— add the closing ':::'"). biz42's parser
+  differs in behavior (see Notes), so biz42 switches in phase 6. Verified: build, check, unit tests,
+  Playwright, byte-identical CLI output, and byte-identical ASTs of all 51 arc42 documents (39
+  Markdown, 12 AsciiDoc) against the pre-phase parser.
 - [x] Phase 3: `buildIndex(elements, schemas)` in `@cli42/lib/model` derives the edges from the
   schemas' `crossRefs`; `CrossRefMeta` gained `relation` (without one, a cross-reference documents
   the model but is not indexed — arc42's `quality-goal.scenario`) and `direction: "reverse"`

@@ -36,6 +36,14 @@
       "types": "./dist/model/index.d.mts",
       "default": "./dist/model/index.mjs"
     },
+    "./notation": {
+      "types": "./dist/notation/index.d.mts",
+      "default": "./dist/notation/index.mjs"
+    },
+    "./parser": {
+      "types": "./dist/parser/index.d.mts",
+      "default": "./dist/parser/index.mjs"
+    },
     "./schema": {
       "types": "./dist/schema/index.d.mts",
       "default": "./dist/schema/index.mjs"
