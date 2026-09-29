@@ -187,6 +187,9 @@ schemas, rules and texts.
 - [x] Phase 6a (biz42): shared Markdown parser with the biz42 dialect; one ```biz42 fence,
   `:::diagram` only inside it; examples, the scope starter template and `explain diagram bmc`
   fence their diagram blocks. No test changed.
+- [x] Phase 6c (biz42): E017 (block outside any section) and W016 (block outside the ```biz42
+  fence) as shared rule factories; biz42's diff refuses preamble blocks (E017) like arc42's — its
+  preamble test now asserts the refusal.
 - [x] Phase 6b (biz42): `explain` text in arc42's layout (`formatBlockGuidance`, `formatBlockList`,
   `formatIgnoreGuidance`); the block list formatter moved into `@cli42/lib/explain`.
 - [x] Phase 5: `@cli42/lib/rules` — factories for the structural rules every language has

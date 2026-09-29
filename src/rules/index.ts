@@ -239,3 +239,66 @@ export function elementWrongChapterRule<K extends string, D extends RuleDocs>(
     },
   };
 }
+
+/** Every block is placed under a heading, in a section. */
+export function blockOutsideSectionRule<D extends RuleDocs>(
+  meta: RuleMeta<D>,
+): Rule<Documents, unknown, unknown, D> {
+  return {
+    meta,
+    check(workspace) {
+      const diagnostics: Diagnostic[] = [];
+      for (const document of workspace.documents) {
+        for (const node of nodesOf(document)) {
+          if (node.kind === "heading") break;
+          if (node.kind !== "block" || !("attributes" in node)) continue;
+          const label = node.attributes["id"] ?? node.blockType;
+          diagnostics.push(
+            finding(
+              meta,
+              `Block '${label}' is not placed under any heading — add a heading above it`,
+              document.filePath,
+              node.startLine,
+            ),
+          );
+        }
+      }
+      return diagnostics;
+    },
+  };
+}
+
+/** Every block is wrapped in the language fence, so Markdown renderers display it. */
+export function blockNotInFenceRule<C, D extends RuleDocs>(
+  meta: RuleMeta<D>,
+  options: {
+    /** Name of the block node's flag telling whether it sat inside the fence. */
+    fenceFlag: string;
+    /** How the fence is called in the message, e.g. "```arc42 fence". */
+    fenceDescription: (context?: C) => string;
+  },
+): Rule<Documents, unknown, C, D> {
+  return {
+    meta,
+    check(workspace, _index, context) {
+      const fenceDescription = options.fenceDescription(context);
+      const diagnostics: Diagnostic[] = [];
+      for (const document of workspace.documents) {
+        for (const node of nodesOf(document)) {
+          if (node.kind !== "block" || !("attributes" in node)) continue;
+          if (node.blockType === "__parse_error__") continue; // error sentinel — not a real block
+          if ((node as unknown as Record<string, unknown>)[options.fenceFlag]) continue;
+          diagnostics.push(
+            finding(
+              meta,
+              `Block '${node.attributes["id"] ?? node.blockType}' is not wrapped in a ${fenceDescription} — wrap it for proper rendering`,
+              document.filePath,
+              node.startLine,
+            ),
+          );
+        }
+      }
+      return diagnostics;
+    },
+  };
+}
