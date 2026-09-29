@@ -184,6 +184,11 @@ schemas, rules and texts.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 6a (biz42): shared Markdown parser with the biz42 dialect; one ```biz42 fence,
+  `:::diagram` only inside it; examples, the scope starter template and `explain diagram bmc`
+  fence their diagram blocks. No test changed.
+- [x] Phase 6b (biz42): `explain` text in arc42's layout (`formatBlockGuidance`, `formatBlockList`,
+  `formatIgnoreGuidance`); the block list formatter moved into `@cli42/lib/explain`.
 - [x] Phase 5: `@cli42/lib/rules` — factories for the structural rules every language has
   (duplicate id, parse error, unknown attribute, block without prose, several blocks under one
   heading, bare Mermaid, element in the wrong chapter with an injected chapter map and file → chapter

@@ -86,6 +86,26 @@ export function formatBlockGuidance(heading: string, guidance: BlockGuidance): s
   return lines.join("\n");
 }
 
+/** One line of the block type list. */
+export interface BlockListEntry {
+  blockType: string;
+  chapter: number;
+  description: string;
+}
+
+/** Render the list of block types with their chapter and description. */
+export function formatBlockList(cli: string, entries: readonly BlockListEntry[]): string {
+  const lines: string[] = [];
+  lines.push(`Block types (run \`${cli} explain <type>\` for full guidance):`);
+  lines.push("");
+  for (const entry of entries) {
+    lines.push(
+      `  ${entry.blockType.padEnd(20)} ch.${String(entry.chapter).padEnd(3)}  ${entry.description}`,
+    );
+  }
+  return lines.join("\n");
+}
+
 export interface ExplainIgnoreResult {
   name: string;
   description: string;
