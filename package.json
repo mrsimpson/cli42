@@ -1,0 +1,114 @@
+{
+  "name": "@cli42/lib",
+  "version": "0.1.0",
+  "description": "The shared language engine of the *42 documentation CLIs (arc42, biz42): Markdown and AsciiDoc parser, schema-driven model, validation engine with generic rules, Mermaid syntax check, authoring guidance, semantic diff, Git snapshots and history.",
+  "keywords": [
+    "arc42",
+    "biz42",
+    "cli",
+    "diff",
+    "git"
+  ],
+  "homepage": "https://github.com/mrsimpson/cli42",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mrsimpson/cli42.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    "./asciidoc": {
+      "types": "./dist/asciidoc/index.d.mts",
+      "default": "./dist/asciidoc/index.mjs"
+    },
+    "./diff": {
+      "types": "./dist/diff/index.d.mts",
+      "default": "./dist/diff/index.mjs"
+    },
+    "./explain": {
+      "types": "./dist/explain/index.d.mts",
+      "default": "./dist/explain/index.mjs"
+    },
+    "./git": {
+      "types": "./dist/git/index.d.mts",
+      "default": "./dist/git/index.mjs"
+    },
+    "./markdown": {
+      "types": "./dist/markdown/index.d.mts",
+      "default": "./dist/markdown/index.mjs"
+    },
+    "./mermaid": {
+      "types": "./dist/mermaid/index.d.mts",
+      "default": "./dist/mermaid/index.mjs"
+    },
+    "./model": {
+      "types": "./dist/model/index.d.mts",
+      "default": "./dist/model/index.mjs"
+    },
+    "./notation": {
+      "types": "./dist/notation/index.d.mts",
+      "default": "./dist/notation/index.mjs"
+    },
+    "./parser": {
+      "types": "./dist/parser/index.d.mts",
+      "default": "./dist/parser/index.mjs"
+    },
+    "./rules": {
+      "types": "./dist/rules/index.d.mts",
+      "default": "./dist/rules/index.mjs"
+    },
+    "./schema": {
+      "types": "./dist/schema/index.d.mts",
+      "default": "./dist/schema/index.mjs"
+    },
+    "./text-diff": {
+      "types": "./dist/text-diff/index.d.mts",
+      "default": "./dist/text-diff/index.mjs"
+    },
+    "./validator": {
+      "types": "./dist/validator/index.d.mts",
+      "default": "./dist/validator/index.mjs"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.mts",
+      "default": "./dist/vite/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "prepare": "vp pack",
+    "test": "vp test",
+    "check": "vp check",
+    "ready": "pnpm run check && pnpm run test && pnpm run build"
+  },
+  "dependencies": {
+    "@asciidoctor/core": "^4.1.0",
+    "marked": "^14.1.4",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "7.0.0",
+    "@semantic-release/exec": "7.1.0",
+    "@semantic-release/github": "12.0.9",
+    "@types/node": "^24.13.3",
+    "mermaid": "11.17.2",
+    "semantic-release": "25.0.9",
+    "typescript": "^5",
+    "vite-plus": "0.1.24"
+  },
+  "peerDependencies": {
+    "mermaid": "^11"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "packageManager": "pnpm@10.32.1"
+}
