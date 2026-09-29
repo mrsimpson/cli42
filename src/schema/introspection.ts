@@ -6,10 +6,10 @@ export interface CrossRefMeta {
   targetKind: string;
   cardinality: "one" | "many";
   /**
-   * The relation of the edge the reference index records for it; without
-   * one, the reference documents the model but is not indexed.
+   * The relation this reference is in the model — the edge the reference
+   * index records and the meta-model shows. Every reference is a relation.
    */
-  relation?: string;
+  relation: string;
   /**
    * "reverse" records the edge from the referenced element to this one
    * (e.g. an interface's `provider` becomes provider → interface).

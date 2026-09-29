@@ -89,8 +89,9 @@ schemas, rules and texts.
 - Rule docs use `arc42Chapter` / `biz42Chapter`. Instead of renaming them, the lib's `RuleMeta` and
   `Rule` are generic over the docs type: each language extends the lib's `RuleDocs` with its own
   chapter field, so `rules --format json` output and all rule files stay unchanged.
-- Open question for the user: arc42's `quality-goal.scenario` is a declared cross-reference that
-  was never indexed, so E002 does not check it. Phase 3 keeps that (no `relation`).
+- arc42's `quality-goal.scenario` was a declared cross-reference that was never indexed. Resolved
+  by the user: the scenario references its goal (`quality-scenario.quality`), so the attribute is
+  gone. Every cross-reference is now a relation (`relation` required).
 - Later, out of scope for now: the CLI shell (about half of `cli.ts` is shared: command routing,
   validate/get/rules/diff/serve/build/history, text/markdown/JSON renderers) and the React diff and
   history components (`DiffSegment`, `ChangesView`, `HistoryChain`, CSS modules).

@@ -2,6 +2,10 @@ import type { z } from "zod";
 import { metaOf } from "../schema/introspection.ts";
 import type { CrossRefMeta } from "../schema/introspection.ts";
 
+function crossRefsOf(schema: z.ZodType): CrossRefMeta[] {
+  return metaOf<{ crossRefs: CrossRefMeta[] }>(schema)?.crossRefs ?? [];
+}
+
 /** A graph edge connecting two elements. */
 export interface IndexEdge<R extends string = string> {
   from: string;
@@ -23,7 +27,7 @@ export interface ReferenceIndex<E, R extends string = string> {
 
 /**
  * Index the references between elements. Every cross-reference a schema
- * declares with a relation (`.meta({ crossRefs })`) becomes an edge, in the
+ * declares (`.meta({ crossRefs })`) becomes an edge of its relation, in the
  * order the schema lists them; the element's field holds one id or a list.
  */
 export function buildIndex<E extends { id: string; kind: string }, R extends string = string>(
@@ -36,12 +40,7 @@ export function buildIndex<E extends { id: string; kind: string }, R extends str
   const edges: IndexEdge<R>[] = [];
 
   const indexed = new Map(
-    Object.entries(schemas).map(([kind, schema]) => [
-      kind,
-      (metaOf<{ crossRefs: CrossRefMeta[] }>(schema)?.crossRefs ?? []).filter(
-        (ref) => ref.relation !== undefined,
-      ),
-    ]),
+    Object.entries(schemas).map(([kind, schema]) => [kind, crossRefsOf(schema)]),
   );
 
   for (const element of elements) byId.set(element.id, element);
@@ -70,4 +69,43 @@ export function buildIndex<E extends { id: string; kind: string }, R extends str
   }
 
   return { byId, refsFrom, refsTo, edges };
+}
+
+/** A relation between element kinds, as the meta-model shows it. */
+export interface MetaRelation<K extends string = string> {
+  /** The kind the relation starts at. */
+  from: K;
+  /** The kinds the relation can point to. */
+  to: K[];
+  /** The relation's name, e.g. "provides". */
+  relation: string;
+  /** The field that declares it (on `from`, or on the target for a reverse relation). */
+  field: string;
+  cardinality: "one" | "many";
+}
+
+/**
+ * The relations between the element kinds of a schema map, in their direction
+ * (a reverse cross-reference points from its target to the declaring kind).
+ * A compound target kind ("quality-goal, constraint, or risk") resolves to
+ * each kind of the schema map it names.
+ */
+export function relationsOf<K extends string>(
+  schemas: Readonly<Record<K, z.ZodType>>,
+): MetaRelation<K>[] {
+  const kinds = Object.keys(schemas) as K[];
+  const targets = (targetKind: string) =>
+    targetKind
+      .split(/,\s*(?:or\s+)?|\s+or\s+/)
+      .map((token) => token.trim())
+      .filter((token): token is K => (kinds as string[]).includes(token));
+  return kinds.flatMap((kind) =>
+    crossRefsOf(schemas[kind]).flatMap((ref) => {
+      const referenced = targets(ref.targetKind);
+      const common = { relation: ref.relation, field: ref.field, cardinality: ref.cardinality };
+      return ref.direction === "reverse"
+        ? referenced.map((target) => ({ from: target, to: [kind], ...common }))
+        : [{ from: kind, to: referenced, ...common }];
+    }),
+  );
 }
