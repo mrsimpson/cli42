@@ -62,3 +62,17 @@ export async function renderProseNodes<N extends { kind: string }, Doc extends {
 
   return { ...doc, nodes: result };
 }
+
+/**
+ * Parse one document and render its prose: the document as a viewer shows it.
+ * Without a renderer, prose stays unrendered.
+ */
+export async function parseDocumentAsync<N extends { kind: string }, Doc extends { nodes: N[] }>(
+  filePath: string,
+  content: string,
+  parser: { parse(filePath: string, content: string): Doc },
+  renderer?: ProseRenderer,
+): Promise<Doc> {
+  const document = parser.parse(filePath, content);
+  return renderer ? renderProseNodes(document, renderer) : document;
+}

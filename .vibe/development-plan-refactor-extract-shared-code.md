@@ -181,9 +181,10 @@ schemas, rules and texts.
 - [x] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only):
   the shared Markdown parser, explain layout, E017/W016, syntax codes per diagram kind, prose
   handling of the builder.
-- [ ] Open (user decision): biz42's notation adapter with prose rendered in core and an async
-  pipeline. biz42's web app renders prose, marked prose changes and commit messages in the browser,
-  so this rewrites its rendering paths — natural to do together with sharing the web components.
+- [x] Phase 9 (biz42, user decision): prose rendered in the backend with the shared Markdown renderer
+  (`@cli42/lib/markdown`, `parseDocumentAsync`); biz42 gets a notation adapter, `loadWorkspaceFromFiles`
+  and an async snapshot/diff/history pipeline; its web app shows the server-rendered prose, marks
+  prose changes on it and shows server-rendered commit messages (`messageHtml`).
 - [ ] After each phase: re-pin the consumers to the new cli42 commit.
 - [ ] After each phase: compare CLI output (validate/get/diff/rules/explain on docs and examples)
   with the pre-phase build; keep each repo's own architecture docs (`docs/arc42`) accurate.
