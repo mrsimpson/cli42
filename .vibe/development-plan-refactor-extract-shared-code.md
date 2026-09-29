@@ -110,7 +110,7 @@ schemas, rules and texts.
 - [x] Agree on the language-definition approach, arc42 way, coverage staying in arc42, Zod as a
   regular re-exported dependency, directive messages with message mappers, test policy.
 - [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
-- [ ] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
+- [x] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
 - [ ] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
 - [ ] Phase 4: parser, AST and notation adapters (arc42's parser as base).
 - [ ] Phase 5: generic rule factories and `explain`.
@@ -160,7 +160,7 @@ schemas, rules and texts.
 - [x] Phase 0: biz42 core, workspace-fs and web use the lib; CLI bundles it.
 - [x] Phase 0: Git dependency pinned to cli42 commit `185a24c`, `onlyBuiltDependencies`.
 - [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
-- [ ] Phase 2: Zod re-export (consumers drop `zod`), schema-derived types, builder, directive
+- [x] Phase 2: Zod re-export (consumers drop `zod`), schema-derived types, builder, directive
   messages, message mappers.
 - [ ] Phase 3: resolver from `crossRefs`.
 - [ ] Phase 4: parser, AST, notation adapters.
@@ -172,6 +172,15 @@ schemas, rules and texts.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 2: `@cli42/lib/schema` (re-exported `z`, list schemas, `CrossRefMeta`, `deriveFields`,
+  `shapeOf`, `metaOf`, `chaptersOf`) and `@cli42/lib/model` (`buildWorkspace` with the schema map, a
+  diagram hook, `proseConsumedBy`, `keepEmpty`, a message mapper; `parseAttributes`; `BuildIssue` with
+  directive default messages; `ElementOf<S>`). Both cores derive `Element` and the per-kind types
+  from their schemas and dropped their `zod` dependency. Messages now read "problem — what to do",
+  e.g. `Invalid priority 'urgent' on quality-goal — use one of: high, medium, low`; unknown
+  attributes suggest the closest known one. biz42 keeps its prose handling (diagrams and bare fences
+  end the prose of the next block) via `proseConsumedBy`; arc42 keeps empty `path` via `keepEmpty`.
+  Verified: build, check, unit tests, Playwright, byte-identical CLI output on docs and examples.
 - [x] Phase 1: `@cli42/lib/validator` (`createValidator`, `applyIgnoreDirectives`, generic `Rule`,
   `SyntaxCheck`) and `@cli42/lib/mermaid` (`createMermaidParser` with a notation → grammar map,
   `mermaidSyntaxCheck` with per-diagram targets and suppression). arc42 keeps `@arc42/mermaid` as a
