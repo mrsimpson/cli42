@@ -19,3 +19,5 @@ export type {
   ParseWarning,
   SourceLocation,
 } from "./types.ts";
+export { buildIndex } from "./index-builder.ts";
+export type { IndexEdge, ReferenceIndex } from "./index-builder.ts";

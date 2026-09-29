@@ -5,6 +5,16 @@ export interface CrossRefMeta {
   field: string;
   targetKind: string;
   cardinality: "one" | "many";
+  /**
+   * The relation of the edge the reference index records for it; without
+   * one, the reference documents the model but is not indexed.
+   */
+  relation?: string;
+  /**
+   * "reverse" records the edge from the referenced element to this one
+   * (e.g. an interface's `provider` becomes provider → interface).
+   */
+  direction?: "forward" | "reverse";
 }
 
 export interface FieldMeta {

@@ -83,6 +83,8 @@ schemas, rules and texts.
 - Rule docs use `arc42Chapter` / `biz42Chapter`. Instead of renaming them, the lib's `RuleMeta` and
   `Rule` are generic over the docs type: each language extends the lib's `RuleDocs` with its own
   chapter field, so `rules --format json` output and all rule files stay unchanged.
+- Open question for the user: arc42's `quality-goal.scenario` is a declared cross-reference that
+  was never indexed, so E002 does not check it. Phase 3 keeps that (no `relation`).
 - Later, out of scope for now: the CLI shell (about half of `cli.ts` is shared: command routing,
   validate/get/rules/diff/serve/build/history, text/markdown/JSON renderers) and the React diff and
   history components (`DiffSegment`, `ChangesView`, `HistoryChain`, CSS modules).
@@ -111,7 +113,7 @@ schemas, rules and texts.
   regular re-exported dependency, directive messages with message mappers, test policy.
 - [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
 - [x] Phase 2: Zod re-export, schema-derived element types, builder with directive messages.
-- [ ] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
+- [x] Phase 3: resolver derived from `crossRefs` (+ `relation`, `direction`).
 - [ ] Phase 4: parser, AST and notation adapters (arc42's parser as base).
 - [ ] Phase 5: generic rule factories and `explain`.
 - [ ] Phase 6 (biz42 only, separate commits): adopt the arc42 way.
@@ -162,7 +164,7 @@ schemas, rules and texts.
 - [x] Phase 1: validation engine, rule types, ignore handling, Mermaid boundary.
 - [x] Phase 2: Zod re-export (consumers drop `zod`), schema-derived types, builder, directive
   messages, message mappers.
-- [ ] Phase 3: resolver from `crossRefs`.
+- [x] Phase 3: resolver from `crossRefs`.
 - [ ] Phase 4: parser, AST, notation adapters.
 - [ ] Phase 5: generic rule factories, `explain`.
 - [ ] Phase 6: biz42 adopts the arc42 way (separate commits; tests may change there only).
@@ -172,6 +174,14 @@ schemas, rules and texts.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] Phase 3: `buildIndex(elements, schemas)` in `@cli42/lib/model` derives the edges from the
+  schemas' `crossRefs`; `CrossRefMeta` gained `relation` (without one, a cross-reference documents
+  the model but is not indexed — arc42's `quality-goal.scenario`) and `direction: "reverse"`
+  (arc42's `interface.provider` → `provides`). Both resolvers' if-chains are gone; arc42 adds its
+  derived interface edges. The metadata order is the edge order, so arc42's deployment node lists
+  `parent` before `hosts` (only visible in `arc42 explain deployment-node`). `explain` keeps
+  showing field, target kind and cardinality only. Verified: build, check, unit tests, Playwright,
+  byte-identical CLI output and identical edge lists on docs and examples.
 - [x] Phase 2: `@cli42/lib/schema` (re-exported `z`, list schemas, `CrossRefMeta`, `deriveFields`,
   `shapeOf`, `metaOf`, `chaptersOf`) and `@cli42/lib/model` (`buildWorkspace` with the schema map, a
   diagram hook, `proseConsumedBy`, `keepEmpty`, a message mapper; `parseAttributes`; `BuildIssue` with
