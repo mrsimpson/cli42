@@ -1,5 +1,4 @@
 import { applyIgnoreDirectives } from "./ignore.ts";
-import type { IgnoreCodes } from "./ignore.ts";
 import type { Diagnostic, IgnoreDirective, Rule, RuleDocs } from "./types.ts";
 
 /**
@@ -18,7 +17,6 @@ export interface SyntaxCheck<W> {
 
 export interface ValidatorOptions<W, I, C, D extends RuleDocs> {
   rules: readonly Rule<W, I, C, D>[];
-  ignore: IgnoreCodes;
   syntax?: SyntaxCheck<W>;
 }
 
@@ -40,12 +38,7 @@ export function createValidator<
   const run = (workspace: W, index: I, context?: C) =>
     options.rules.flatMap((rule) => rule.check(workspace, index, context));
   const ignore = (workspace: W, diagnostics: Diagnostic[]) =>
-    applyIgnoreDirectives(
-      workspace.ignoreDirectives ?? [],
-      diagnostics,
-      rulesByCode,
-      options.ignore,
-    );
+    applyIgnoreDirectives(workspace.ignoreDirectives ?? [], diagnostics, rulesByCode);
 
   return {
     validate(workspace, index, context) {

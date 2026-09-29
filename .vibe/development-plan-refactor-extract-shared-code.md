@@ -29,8 +29,11 @@ schemas, rules and texts.
   (`WorkspaceDiff<WorkspacePayload>`). For the language engine, element types are derived from the
   schema map instead of being declared twice:
   `ElementOf<S> = { [K in keyof S]: z.infer<S[K]> & { kind: K; loc: SourceLocation } }[keyof S]`.
-- Differences are parameters, not forks: `preambleBlockRule` (arc42 E017), `sectionDiagrams`
-  (biz42), document extensions, the document predicate for commit files, rule codes, fence names.
+- Differences are parameters, not forks: `sectionDiagrams` (biz42), document extensions, the
+  document predicate for commit files, fence names, chapter maps.
+- The lib owns the codes of its generic rules and of the validation engine's own findings, in a
+  namespace of their own: severity letter + `G` + two digits (EG01–EG04, WG01–WG07; at most 99 per
+  severity). Languages do not inject codes; they accept the renumbering (small test changes).
 - A language is declared once (`defineLanguage({ name, fences, notations, elements, diagrams,
   chapters, ignore, rules, messages })`); the lib builds the pipeline from it.
 - **Prefer the arc42 way** (in ideas, not necessarily in code) wherever the two repos differ:

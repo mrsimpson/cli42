@@ -2,6 +2,7 @@
 // cross-references and tips of each block type, and the ignore directive.
 import type { z } from "zod";
 import { deriveFields, metaOf } from "../schema/introspection.ts";
+import { GENERIC_CODES } from "../validator/codes.ts";
 import type { BlockSchema, CrossRefMeta, FieldMeta } from "../schema/introspection.ts";
 
 export type ExplainFieldResult = FieldMeta;
@@ -122,10 +123,6 @@ export interface IgnoreGuidanceOptions {
   document: string;
   /** The info string of the language fence, e.g. "arc42". */
   fence: string;
-  /** Code of the finding for a directive that targets an error. */
-  rejectedCode: string;
-  /** Code of the finding for an unused directive. */
-  staleCode: string;
   /** An example directive line, e.g. ":::ignore H001 ...". */
   example: string;
   /** The file that records suppressed hints, e.g. "architecture-evidence.md". */
@@ -134,7 +131,9 @@ export interface IgnoreGuidanceOptions {
 
 /** The guidance for the `:::ignore` directive of a language. */
 export function ignoreGuidance(options: IgnoreGuidanceOptions): ExplainIgnoreResult {
-  const { cli, document, fence, rejectedCode, staleCode, example, evidenceFile } = options;
+  const { cli, document, fence, example, evidenceFile } = options;
+  const rejectedCode = GENERIC_CODES.rejectedIgnore;
+  const staleCode = GENERIC_CODES.staleIgnore;
   return {
     name: "ignore directive",
     description:

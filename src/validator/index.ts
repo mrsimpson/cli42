@@ -3,7 +3,7 @@
 export { createValidator } from "./engine.ts";
 export type { SyntaxCheck, Validator, ValidatorOptions } from "./engine.ts";
 export { applyIgnoreDirectives } from "./ignore.ts";
-export type { IgnoreCodes } from "./ignore.ts";
+export { GENERIC_CODES } from "./codes.ts";
 export type {
   Diagnostic,
   IgnoreDirective,

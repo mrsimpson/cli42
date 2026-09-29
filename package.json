@@ -1,7 +1,7 @@
 {
   "name": "@cli42/lib",
   "version": "0.1.0",
-  "description": "Shared building blocks of the *42 documentation CLIs (arc42, biz42): semantic workspace diff, Git snapshots and history, validation engine, Mermaid syntax boundary, word-level text diff.",
+  "description": "The shared language engine of the *42 documentation CLIs (arc42, biz42): Markdown parser, schema-driven model, validation engine with generic rules, Mermaid syntax check, authoring guidance, semantic diff, Git snapshots and history.",
   "keywords": [
     "arc42",
     "biz42",

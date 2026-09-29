@@ -13,6 +13,7 @@
  * paths) so that sections can be matched across snapshots.
  */
 
+import { GENERIC_CODES } from "../validator/codes.ts";
 import type {
   DiagramOf,
   DiffAstNode,
@@ -101,11 +102,11 @@ export interface WorkspaceDiff<W extends WorkspaceSnapshot = WorkspaceSnapshot> 
 
 export interface DiffOptions {
   /**
-   * Code of the validation rule that forbids blocks outside any section. When
-   * set, a block in a document preamble is refused (fix validation first);
-   * otherwise the preamble is a section that may hold blocks.
+   * Refuse a block in a document preamble (EG04: every block sits in a
+   * section — fix validation first). Otherwise the preamble is a section that
+   * may hold blocks.
    */
-  preambleBlockRule?: string;
+  rejectPreambleBlocks?: boolean;
 }
 
 /** @internal Shared with the diff view; not part of the public API. */
@@ -183,9 +184,9 @@ function sectionsOf(document: DiffDocumentAst, options: DiffOptions): Section[] 
     } else if (node.kind === "prose") {
       prose[prose.length - 1]!.push(node.text);
     } else if (node.kind === "block") {
-      if (current.isPreamble && options.preambleBlockRule !== undefined) {
+      if (current.isPreamble && options.rejectPreambleBlocks) {
         throw new Error(
-          `${document.filePath}:${node.startLine}: block is not placed under any heading (${options.preambleBlockRule}) — fix validation errors before diffing`,
+          `${document.filePath}:${node.startLine}: block is not placed under any heading (${GENERIC_CODES.outsideSection}) — fix validation errors before diffing`,
         );
       }
       current.hasBlocks = true;
@@ -226,7 +227,7 @@ export class SnapshotIndex<W extends WorkspaceSnapshot = WorkspaceSnapshot> {
     for (const element of payload.elements) {
       if (this.elements.has(element.id)) {
         throw new Error(
-          `Duplicate id '${element.id}' in ${side} snapshot (E001) — fix validation errors before diffing`,
+          `Duplicate id '${element.id}' in ${side} snapshot (${GENERIC_CODES.duplicateId}) — fix validation errors before diffing`,
         );
       }
       this.elements.set(element.id, element);
@@ -242,12 +243,12 @@ export class SnapshotIndex<W extends WorkspaceSnapshot = WorkspaceSnapshot> {
   }
 
   /**
-   * The section of an element. With a {@link DiffOptions.preambleBlockRule},
+   * The section of an element. With {@link DiffOptions.rejectPreambleBlocks},
    * a preamble does not hold elements.
    */
   sectionAt(file: string, line: number): Section {
     const section = this.sectionContaining(file, line);
-    if (section.isPreamble && this.options.preambleBlockRule !== undefined) {
+    if (section.isPreamble && this.options.rejectPreambleBlocks) {
       throw new Error(`${file}:${line}: element is not placed in any section of its document`);
     }
     return section;

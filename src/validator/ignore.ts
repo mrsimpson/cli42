@@ -1,12 +1,5 @@
+import { GENERIC_CODES } from "./codes.ts";
 import type { Diagnostic, IgnoreDirective, RuleMeta } from "./types.ts";
-
-/** Codes of the findings the ignore handling itself reports. */
-export interface IgnoreCodes {
-  /** A directive that did not suppress any diagnostic. */
-  stale: string;
-  /** A directive that targets an error-severity rule, which cannot be suppressed. */
-  rejected: string;
-}
 
 /** Returns true if the rule code targets an error-severity rule (cannot be suppressed). */
 function isErrorSeverityCode(
@@ -23,13 +16,12 @@ function isErrorSeverityCode(
 /**
  * Apply ignore directives: each directive suppresses one matching warning or
  * hint at or after its line; unused directives and directives targeting
- * errors are reported. Marks each directive's `used` flag.
+ * errors are reported (WG06, WG07). Marks each directive's `used` flag.
  */
 export function applyIgnoreDirectives(
   directives: IgnoreDirective[],
   diagnostics: Diagnostic[],
   rulesByCode: ReadonlyMap<string, { meta: Pick<RuleMeta, "severity"> }>,
-  codes: IgnoreCodes,
 ): Diagnostic[] {
   for (const directive of directives) directive.used = false;
 
@@ -39,7 +31,7 @@ export function applyIgnoreDirectives(
 
   const rejectedDiags: Diagnostic[] = rejected.map(
     (d): Diagnostic => ({
-      code: codes.rejected,
+      code: GENERIC_CODES.rejectedIgnore,
       severity: "warning",
       message: `Cannot suppress error-severity rule '${d.ruleCode}'; only warnings (W) and hints (H) can be ignored`,
       file: d.file,
@@ -74,7 +66,7 @@ export function applyIgnoreDirectives(
     .filter((directive) => !directive.used)
     .map(
       (directive): Diagnostic => ({
-        code: codes.stale,
+        code: GENERIC_CODES.staleIgnore,
         severity: "warning",
         message: `Ignore directive for '${directive.ruleCode}' did not suppress any diagnostic`,
         file: directive.file,
