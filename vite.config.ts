@@ -20,7 +20,7 @@ export default defineConfig({
     exports: false,
     // Mermaid stays a runtime dependency of the CLIs: bundling it breaks its
     // DOMPurify integration in Node.
-    deps: { neverBundle: ["mermaid"] },
+    deps: { neverBundle: ["mermaid", "@asciidoctor/core"] },
   },
   fmt: {},
   lint: {

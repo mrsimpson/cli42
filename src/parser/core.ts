@@ -1,76 +1,34 @@
-// Line-oriented parser for the Markdown notation of a *42 language: headings,
-// prose, `:::type` blocks with `key: value` attributes inside a language fence,
+// The notation-independent parser of the *42 DSL. A notation turns each line
+// into a token (comment, fence delimiter, fence opening with an info string,
+// source annotation, heading, text); the core reads the DSL from the tokens:
+// the language fence, `:::type` blocks with `key: value` attributes,
 // `:::ignore` directives, `:::diagram` metadata followed by its source fence,
-// and bare Mermaid fences. What differs per language is its dialect.
+// and bare Mermaid fences. Everything else is prose, rendered by the notation.
+import type {
+  BareMermaidNode,
+  DiagramMetadata,
+  DslDialect,
+  MarkdownBlockNode,
+  MarkdownDocument,
+  MarkdownNode,
+} from "./nodes.ts";
 
-export interface HeadingNode {
-  kind: "heading";
-  level: number;
-  text: string;
-  line: number;
-}
+/** What one line is, as the notation sees it. */
+export type LineToken =
+  /** A comment line; skipped entirely. */
+  | { t: "skip" }
+  /** A fence delimiter without info (``` or ----): closes a fence, or opens one. */
+  | { t: "delim" }
+  /** A fence opening with its info string on the same line (```arc42). */
+  | { t: "open"; info: string }
+  /** A source annotation; the fence opens at the next delimiter ([source,arc42] then ----). */
+  | { t: "annotation"; info?: string }
+  | { t: "heading"; level: number; text: string }
+  | { t: "text" };
 
-export interface ProseNode {
-  kind: "prose";
-  text: string;
-  line: number;
-  /** HTML fragment populated by the prose renderer post-parse step. Undefined until rendered. */
-  renderedHtml?: string;
-}
-
-/** A `:::type` block; the dialect's fence flag records whether it sat inside the language fence. */
-export interface MarkdownBlockNode {
-  kind: "block";
-  blockType: string; // raw string — builder rejects unknowns
-  attributes: Record<string, string>;
-  startLine: number;
-  endLine: number;
-}
-
-/** Bare Mermaid fenced block with no preceding :::diagram metadata block. */
-export interface BareMermaidNode {
-  kind: "bare-mermaid";
-  source: string;
-  startLine: number;
-  endLine: number;
-}
-
-/** Ignore directive: `:::ignore RULE [reason] :::` inside the language fence. */
-export interface IgnoreNode {
-  kind: "ignore";
-  ruleCode: string;
-  reason?: string;
-  startLine: number;
-  endLine: number;
-}
-
-export type MarkdownNode<D, F extends string> =
-  | HeadingNode
-  | ProseNode
-  | (MarkdownBlockNode & Record<F, boolean>)
-  | D
-  | BareMermaidNode
-  | IgnoreNode;
-
-export interface MarkdownDocument<D, F extends string> {
-  filePath: string;
-  nodes: MarkdownNode<D, F>[];
-}
-
-/** The attributes of a closed `:::diagram` block, waiting for its source fence. */
-export interface DiagramMetadata {
-  attributes: Record<string, string>;
-  startLine: number;
-}
-
-/** What a language defines about its Markdown notation. */
-export interface MarkdownDialect<D, F extends string> {
-  /** Info strings of the fence that wraps blocks, e.g. ["arc42"]. */
-  fences: readonly string[];
-  /** Name of the block node's flag telling whether it sat inside the fence, e.g. "inArc42Fence". */
-  fenceFlag: F;
-  /** Build the diagram node of a `:::diagram` block and its source (empty when none followed). */
-  createDiagram(metadata: DiagramMetadata, source: string, endLine: number): D;
+/** How a notation reads lines; `lines()` returns a fresh (stateful) tokenizer per document. */
+export interface LineNotation {
+  lines(): (line: string) => LineToken;
 }
 
 interface IgnoreMetadata {
@@ -79,19 +37,25 @@ interface IgnoreMetadata {
   startLine: number;
 }
 
+const MERMAID = /^mermaid[a-zA-Z0-9_-]*$/;
+
 /**
- * Line-oriented parser for Markdown documents of a *42 language.
+ * Parse a document of a *42 language with the given notation.
  * Parser is intentionally dumb — unknown block types are emitted as-is;
  * the meta-model builder rejects them.
  */
-export function parseMarkdown<D, F extends string>(
+export function parseLines<D, F extends string>(
   filePath: string,
   content: string,
-  dialect: MarkdownDialect<D, F>,
+  notation: LineNotation,
+  dialect: DslDialect<D, F>,
 ): MarkdownDocument<D, F> {
   const lines = content.split("\n");
   const nodes: MarkdownNode<D, F>[] = [];
-  const fenceOpen = new RegExp(`^\`\`\`(?:${dialect.fences.join("|")})\\s*$`);
+  const tokenOf = notation.lines();
+  const isLanguageFence = (info: string | undefined) =>
+    info !== undefined && dialect.fences.includes(info);
+  const isMermaid = (info: string | undefined) => info !== undefined && MERMAID.test(info);
   const block = (node: MarkdownBlockNode, inFence: boolean) =>
     ({ ...node, [dialect.fenceFlag]: inFence }) as MarkdownBlockNode & Record<F, boolean>;
 
@@ -108,37 +72,20 @@ export function parseMarkdown<D, F extends string>(
     source: string[];
   } | null = null;
   let openBareMermaid: { source: string[]; startLine: number } | null = null;
+  // A source annotation seen, waiting for its delimiter: the language fence or a bare Mermaid fence.
+  let annotated: "language" | "mermaid" | null = null;
 
-  let inHtmlComment = false;
   let inFence = false;
 
   for (let i = 0; i < lines.length; i++) {
     const lineNo = i + 1; // 1-indexed
     const line = lines[i]!;
+    const token = tokenOf(line);
 
-    // Track HTML comment blocks (<!-- ... -->) and skip their contents.
-    // This allows template guidance to include example :::blocks without them being parsed.
-    // Handle both single-line (<!-- foo -->) and multi-line comments.
-    if (!inHtmlComment) {
-      const openIdx = line.indexOf("<!--");
-      if (openIdx !== -1) {
-        const closeIdx = line.indexOf("-->", openIdx + 4);
-        if (closeIdx === -1) {
-          // Opens but does not close on this line — enter comment mode
-          inHtmlComment = true;
-        }
-        // Skip this line regardless (comment open on this line)
-        continue;
-      }
-    } else {
-      if (line.includes("-->")) {
-        inHtmlComment = false;
-      }
-      continue;
-    }
+    if (token.t === "skip") continue;
 
     if (openBareMermaid) {
-      if (/^```\s*$/.test(line)) {
+      if (token.t === "delim") {
         const node: BareMermaidNode = {
           kind: "bare-mermaid",
           source: openBareMermaid.source.join("\n"),
@@ -154,7 +101,7 @@ export function parseMarkdown<D, F extends string>(
     }
 
     if (openDiagram) {
-      if (/^```\s*$/.test(line)) {
+      if (token.t === "delim") {
         nodes.push(
           dialect.createDiagram(openDiagram.metadata, openDiagram.source.join("\n"), lineNo),
         );
@@ -167,15 +114,16 @@ export function parseMarkdown<D, F extends string>(
 
     if (pendingDiagram) {
       if (line.trim() === "") continue;
-      // A diagram metadata block is closed before its Mermaid source fence.
-      // While waiting for that source, the first bare fence is the enclosing
-      // language fence, not the diagram source itself.
-      if (inFence && /^```\s*$/.test(line)) {
+      // A diagram metadata block is closed before its source fence. While
+      // waiting for that source, the first delimiter inside the language
+      // fence closes it; it is not the diagram source itself.
+      if (inFence && token.t === "delim") {
         inFence = false;
         continue;
       }
-      const fenceMatch = /^```([a-zA-Z0-9_-]+)?\s*$/.exec(line);
-      if (fenceMatch) {
+      // A source annotation announces the source fence: its delimiter follows.
+      if (token.t === "annotation") continue;
+      if (token.t === "open" || token.t === "delim") {
         // Opening fence of the diagram source — do NOT include it in source.
         openDiagram = { metadata: pendingDiagram, source: [] };
         pendingDiagram = null;
@@ -198,11 +146,10 @@ export function parseMarkdown<D, F extends string>(
         pendingIgnore = null;
         continue;
       }
-      // Line contains rule code and/or reason - extract it
-      // The line should be: ruleCode [reason] (without the :::: prefix)
+      // The line should be: ruleCode [reason] (without the ::: prefix)
       const contentMatch = /^([^:\s]+)(?:\s+(.*?))?\s*$/.exec(line);
       if (contentMatch) {
-        // Verify it looks like a rule code (starts with letter/number, may contain dots)
+        // Verify it looks like a rule code (starts with letter/number, may contain dashes)
         if (/^[a-zA-Z0-9]+[a-zA-Z0-9-]*$/.test(contentMatch[1]!)) {
           pendingIgnore.ruleCode = contentMatch[1]!;
           pendingIgnore.reason = contentMatch[2] ? contentMatch[2].trim() : undefined;
@@ -228,23 +175,38 @@ export function parseMarkdown<D, F extends string>(
       }
     }
 
-    // Language fence (e.g. ```arc42 ... ```) wraps :::blocks for Markdown renderer compatibility.
-    // Only recognised outside diagram states to avoid conflicting with the diagram source fence.
+    // The language fence wraps :::blocks so ordinary renderers show them as
+    // code. Only recognised outside diagram states to avoid conflicting with
+    // the diagram source fence.
     if (!openDiagram && !pendingDiagram && !openBareMermaid) {
-      if (fenceOpen.test(line)) {
+      if (token.t === "open" && isLanguageFence(token.info)) {
         inFence = true;
         continue;
       }
-      if (inFence && /^```\s*$/.test(line)) {
+      if (token.t === "annotation" && isLanguageFence(token.info)) {
+        annotated = "language";
+        continue;
+      }
+      if (token.t === "annotation" && isMermaid(token.info) && !inFence) {
+        annotated = "mermaid";
+        continue;
+      }
+      if (annotated !== null && token.t === "delim") {
+        if (annotated === "language") inFence = true;
+        else openBareMermaid = { source: [], startLine: lineNo };
+        annotated = null;
+        continue;
+      }
+      // An annotation is only one when its delimiter follows (blank lines aside).
+      if (annotated !== null && line.trim() !== "") annotated = null;
+      if (inFence && token.t === "delim") {
         inFence = false;
         continue;
       }
 
-      // Bare Mermaid fenced block (no preceding :::diagram block).
-      // Emit as BareMermaidNode so the renderer can still display it,
-      // and the validator (W017) can warn about the missing :::diagram block.
-      const bareMermaidMatch = /^```(mermaid[a-zA-Z0-9_-]*)\s*$/.exec(line);
-      if (bareMermaidMatch && !inFence) {
+      // Bare Mermaid fence (no preceding :::diagram block): the renderer can
+      // still display it, and a rule warns about the missing :::diagram block.
+      if (token.t === "open" && isMermaid(token.info) && !inFence) {
         openBareMermaid = { source: [], startLine: lineNo };
         continue;
       }
@@ -259,8 +221,7 @@ export function parseMarkdown<D, F extends string>(
             startLine: openBlock.startLine,
           };
         } else if (openBlock.blockType === "ignore") {
-          // Multi-line ignore directive (shouldn't happen with single-line syntax)
-          // Emit as ignore node with no content
+          // A block-form ignore directive without content: emit an inert ignore node
           nodes.push({
             kind: "ignore",
             ruleCode: "",
@@ -295,9 +256,7 @@ export function parseMarkdown<D, F extends string>(
       continue;
     }
 
-    // Opening fence: :::type or single-line directive like :::ignore RULE [reason] :::
-    // Check for single-line ignore directive first (entire directive on one line)
-    // This matches the complete directive on one line.
+    // Single-line ignore directive: :::ignore RULE [reason] ::: (inside the language fence)
     const singleLineIgnore = inFence
       ? /^:::ignore\s+([^:\s]+)(?:\s+(.*?))?\s*:::\s*$/.exec(line)
       : null;
@@ -311,7 +270,7 @@ export function parseMarkdown<D, F extends string>(
       });
       continue;
     }
-    // Check for bare/malformed ignore (opening but no rule code) with closing on same line
+    // Bare/malformed ignore (no rule code) closed on the same line
     if (inFence && /^:::ignore\s*:::$/.test(line)) {
       nodes.push({
         kind: "ignore",
@@ -323,18 +282,15 @@ export function parseMarkdown<D, F extends string>(
       continue;
     }
 
-    // A bare ignore marker outside the language fence is ordinary Markdown, not
+    // A bare ignore marker outside the language fence is ordinary prose, not
     // an unknown block and therefore must not create a parse error.
     if (!inFence && /^:::ignore\s*$/.test(line)) {
       nodes.push({ kind: "prose", text: line, line: lineNo });
       continue;
     }
 
-    // Opening fence: :::type or single-line directive
-    // Check for ignore directive first (before general :::type pattern)
-    // Only recognize ignore directives inside the language fence
+    // Ignore directives are only recognised inside the language fence
     if (inFence && line.startsWith(":::ignore")) {
-      // Single-line directive: :::ignore RULE [reason] :::
       const singleLineMatch = /^:::ignore\s+([^:\s]+)(?:\s+(.*?))?\s*:::/.exec(line);
       if (singleLineMatch) {
         nodes.push({
@@ -347,13 +303,8 @@ export function parseMarkdown<D, F extends string>(
         continue;
       }
       // Bare/malformed directive: :::ignore (no rule code, no closing)
-      const bareMatch = /^:::ignore\s*$/.exec(line);
-      if (bareMatch) {
-        pendingIgnore = {
-          ruleCode: "",
-          reason: undefined,
-          startLine: lineNo,
-        };
+      if (/^:::ignore\s*$/.test(line)) {
+        pendingIgnore = { ruleCode: "", reason: undefined, startLine: lineNo };
         continue;
       }
       // Multi-line directive opening: :::ignore RULE [reason] (no closing :::)
@@ -379,27 +330,18 @@ export function parseMarkdown<D, F extends string>(
       continue;
     }
 
-    // Heading
-    const headingMatch = /^(#{1,6})\s+(.+)$/.exec(line);
-    if (headingMatch) {
-      nodes.push({
-        kind: "heading",
-        level: headingMatch[1]!.length,
-        text: headingMatch[2]!.trim(),
-        line: lineNo,
-      });
+    if (token.t === "heading") {
+      nodes.push({ kind: "heading", level: token.level, text: token.text, line: lineNo });
       continue;
     }
 
-    // Prose: emit all lines outside blocks, including blank lines.
-    // Blank lines must be preserved so that marked receives the correct
-    // paragraph/table boundaries (e.g. a blank line between a table and the
-    // following paragraph prevents marked from absorbing the paragraph as a
-    // table row in its first column).
+    // Prose: emit all lines outside blocks, including blank lines. Blank lines
+    // must be preserved so that the prose renderer receives the correct
+    // paragraph/table boundaries.
     nodes.push({ kind: "prose", text: line, line: lineNo });
   }
 
-  // Unclosed block at end of file → emit a sentinel so E005/parse-error fires
+  // Unclosed block at end of file → emit a sentinel so the parse-error rule fires
   if (openBlock !== null) {
     nodes.push(
       block(
@@ -418,7 +360,7 @@ export function parseMarkdown<D, F extends string>(
     );
   }
 
-  // Process any pending diagram at EOF (diagram block was closed but no fence followed)
+  // A diagram block closed at the end of the file, with no source fence after it
   if (pendingDiagram) {
     nodes.push(dialect.createDiagram(pendingDiagram, "", pendingDiagram.startLine));
   }

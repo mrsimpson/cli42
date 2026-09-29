@@ -3,27 +3,29 @@
 Code shared by the \*42 documentation CLIs —
 [arc42-language](https://github.com/docToolchain/arc42-language) (`arc42`) and
 [biz42](https://github.com/mrsimpson/biz42) (`biz42`). Both parse Markdown
-documents with fenced blocks into a workspace of elements, diagrams and edges;
-everything here works on that shape without knowing the domain model. A
+or AsciiDoc documents with fenced blocks into a workspace of elements, diagrams
+and edges; everything here works on that shape without knowing the domain
+model. A
 language declares what makes it that language — its schemas, diagram kinds,
 rules and texts — and the library does the rest.
 
 Published as the npm package **`@cli42/lib`**, one subpath per concern:
 
-| Import                 | Runs in       | Contents                                                                                                                                                                       |
-| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@cli42/lib/parser`    | Node, browser | Markdown notation parser (headings, prose, `:::blocks`, `:::ignore`, `:::diagram` + source fence, bare Mermaid), configured by a dialect                                       |
-| `@cli42/lib/notation`  | Node, browser | `NotationAdapter`, `ProseRenderer`, `renderProseNodes`, `parseDocumentAsync` (parse, then render prose), `detectNotation`                                                      |
-| `@cli42/lib/markdown`  | Node, browser | The Markdown prose renderer (`MarkdownProseRenderer`, `renderMarkdown`, backed by marked) — prose is rendered once, in the backend                                             |
-| `@cli42/lib/schema`    | Node, browser | Zod (re-exported, one version for all languages), list schemas, `CrossRefMeta`, schema introspection                                                                           |
-| `@cli42/lib/model`     | Node, browser | `ElementOf<S>` (element types from the schemas), `buildWorkspace` with directive build messages, `buildIndex` from the schemas' cross-references                               |
-| `@cli42/lib/validator` | Node, browser | Rule and diagnostic types, `createValidator` (rules, syntax check, ignore directives), `GENERIC_CODES`                                                                         |
-| `@cli42/lib/rules`     | Node, browser | The generic rules every language has (`genericRules`)                                                                                                                          |
-| `@cli42/lib/mermaid`   | Node          | Node-compatible Mermaid syntax check (`createMermaidParser`, `mermaidSyntaxCheck`); `mermaid` is a peer dependency, loaded on demand                                           |
-| `@cli42/lib/explain`   | Node, browser | Authoring guidance from the schemas (`blockGuidance`, `formatBlockGuidance`, `formatBlockList`, `ignoreGuidance`)                                                              |
-| `@cli42/lib/diff`      | Node, browser | Semantic diff of two workspace snapshots (`diffWorkspaces`), its render-ready view (`buildDiffView`), block/prose consistency findings, change counts                          |
-| `@cli42/lib/git`       | Node          | The two snapshots a `git diff`-style spec compares (`resolveComparison`), changed and untracked files, the files and blobs of a commit, the history of a workspace's documents |
-| `@cli42/lib/text-diff` | Node, browser | Word-level token diff and `<ins>`/`<del>` marking of rendered HTML                                                                                                             |
+| Import                 | Runs in       | Contents                                                                                                                                                                        |
+| ---------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@cli42/lib/parser`    | Node, browser | One notation-independent core (headings, prose, `:::blocks`, `:::ignore`, `:::diagram` + source fence, bare Mermaid), configured by a dialect; Markdown and AsciiDoc tokenizers |
+| `@cli42/lib/notation`  | Node, browser | `NotationAdapter`, `ProseRenderer`, `renderProseNodes`, `parseDocumentAsync` (parse, then render prose), `detectNotation`                                                       |
+| `@cli42/lib/markdown`  | Node, browser | The Markdown prose renderer (`MarkdownProseRenderer`, `renderMarkdown`, backed by marked) — prose is rendered once, in the backend                                              |
+| `@cli42/lib/asciidoc`  | Node, browser | The AsciiDoc prose renderer (`AsciidocProseRenderer`); `@asciidoctor/core` is an optional peer dependency                                                                       |
+| `@cli42/lib/schema`    | Node, browser | Zod (re-exported, one version for all languages), list schemas, `CrossRefMeta`, schema introspection                                                                            |
+| `@cli42/lib/model`     | Node, browser | `ElementOf<S>` (element types from the schemas), `buildWorkspace` with directive build messages, `buildIndex` from the schemas' cross-references                                |
+| `@cli42/lib/validator` | Node, browser | Rule and diagnostic types, `createValidator` (rules, syntax check, ignore directives), `GENERIC_CODES`                                                                          |
+| `@cli42/lib/rules`     | Node, browser | The generic rules every language has (`genericRules`)                                                                                                                           |
+| `@cli42/lib/mermaid`   | Node          | Node-compatible Mermaid syntax check (`createMermaidParser`, `mermaidSyntaxCheck`); `mermaid` is a peer dependency, loaded on demand                                            |
+| `@cli42/lib/explain`   | Node, browser | Authoring guidance from the schemas (`blockGuidance`, `formatBlockGuidance`, `formatBlockList`, `ignoreGuidance`)                                                               |
+| `@cli42/lib/diff`      | Node, browser | Semantic diff of two workspace snapshots (`diffWorkspaces`), its render-ready view (`buildDiffView`), block/prose consistency findings, change counts                           |
+| `@cli42/lib/git`       | Node          | The two snapshots a `git diff`-style spec compares (`resolveComparison`), changed and untracked files, the files and blobs of a commit, the history of a workspace's documents  |
+| `@cli42/lib/text-diff` | Node, browser | Word-level token diff and `<ins>`/`<del>` marking of rendered HTML                                                                                                              |
 
 ## Generic rule codes
 

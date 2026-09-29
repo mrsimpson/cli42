@@ -191,6 +191,12 @@ schemas, rules and texts.
 - [ ] At the end: document `@cli42/lib` as a shared dependency in both repos' architecture docs.
 
 ### Completed
+- [x] AsciiDoc in the lib: `@cli42/lib/parser` is one notation-independent core (`parseLines`) fed by
+  line tokenizers (`MARKDOWN_LINES`, `ASCIIDOC_LINES`); blocks, ignore directives and diagrams are
+  handled once for both notations. `@cli42/lib/asciidoc` holds the AsciiDoc prose renderer
+  (`@asciidoctor/core` optional peer). arc42's AsciiDoc parser and renderer are wrappers; the ASTs of
+  all 51 docs are identical. AsciiDoc gains what Markdown had: a `:::diagram` takes the source of
+  its `[source,mermaid]` fence (it was always empty), multi-line and bare ignore directives.
 - [x] Phase 6a (biz42): shared Markdown parser with the biz42 dialect; one ```biz42 fence,
   `:::diagram` only inside it; examples, the scope starter template and `explain diagram bmc`
   fence their diagram blocks. No test changed.

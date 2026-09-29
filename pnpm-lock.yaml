@@ -19,6 +19,9 @@ importers:
         specifier: 4.5.4
         version: 4.5.4
     devDependencies:
+      '@asciidoctor/core':
+        specifier: ^4.1.0
+        version: 4.1.0
       '@types/node':
         specifier: ^24.13.3
         version: 24.19.0
@@ -36,6 +39,15 @@ packages:
 
   '@antfu/install-pkg@2.1.0':
     resolution: {integrity: sha512-sdg9NxU3zR4Mnawfbc/x6GB5Wf17WYud5qOuEuxXjaKpYpMkISSJEjItGebXJ2bQ4DIcly4NYH23mtkGJjvKUw==}
+
+  '@asciidoctor/core@4.1.0':
+    resolution: {integrity: sha512-3PpZu3m0V2lT2jljqsH0LJukaMdm8cpv0tuTMijiiwTBSUrVlEd8NBwzH5iyGlS3yPI6i3ZaaNL6enXelOVpRg==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      highlight.js: ^11.0.0
+    peerDependenciesMeta:
+      highlight.js:
+        optional: true
 
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
@@ -1244,6 +1256,8 @@ snapshots:
     dependencies:
       package-manager-detector: 1.8.0
       tinyexec: 1.3.1
+
+  '@asciidoctor/core@4.1.0': {}
 
   '@braintree/sanitize-url@7.1.2': {}
 
