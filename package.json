@@ -80,6 +80,10 @@
       "types": "./dist/vite/index.d.mts",
       "default": "./dist/vite/index.mjs"
     },
+    "./web": {
+      "types": "./dist/web/index.d.mts",
+      "default": "./dist/web/index.mjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
