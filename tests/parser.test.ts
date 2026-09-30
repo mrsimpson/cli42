@@ -136,6 +136,95 @@ describe("parseMarkdown", () => {
   });
 });
 
+describe("code fences of other languages", () => {
+  const blocks = (nodes: Array<{ kind: string }>) => nodes.filter((node) => node.kind === "block");
+
+  test("a block inside ```ts is code, not the model — and stays in the prose", () => {
+    const document = parseMarkdown(
+      "a.demo42.md",
+      md("# A", "```ts", ":::service", "id: example", ":::", "```", "After."),
+      DEMO_DIALECT,
+    );
+    expect(blocks(document.nodes)).toEqual([]);
+    expect(
+      document.nodes
+        .filter((node) => node.kind === "prose")
+        .map((node) => (node as { text: string }).text),
+    ).toEqual(["```ts", ":::service", "id: example", ":::", "```", "After.", ""]);
+  });
+
+  test("a ```markdown example of the DSL, language fence included, is code", () => {
+    const document = parseMarkdown(
+      "a.demo42.md",
+      md("# A", "```markdown", "```demo42", ":::service", "id: example", ":::", "```"),
+      DEMO_DIALECT,
+    );
+    expect(blocks(document.nodes)).toEqual([]);
+  });
+
+  test("blocks after the foreign fence are read again", () => {
+    const document = parseMarkdown(
+      "a.demo42.md",
+      md(
+        "# A",
+        "```ts",
+        "const x = 1;",
+        "```",
+        ...block("service", { id: "real", title: "Real", status: "live" }),
+      ),
+      DEMO_DIALECT,
+    );
+    expect(blocks(document.nodes)).toMatchObject([
+      { blockType: "service", attributes: { id: "real" }, inDemoFence: true },
+    ]);
+  });
+
+  test("a block without any fence is still read (WG05 warns about it)", () => {
+    const document = parseMarkdown(
+      "a.demo42.md",
+      md("# A", ":::service", "id: bare", ":::"),
+      DEMO_DIALECT,
+    );
+    expect(blocks(document.nodes)).toMatchObject([
+      { attributes: { id: "bare" }, inDemoFence: false },
+    ]);
+  });
+
+  test("an AsciiDoc [source,ts] listing is code", () => {
+    const document = parseAsciidoc(
+      "a.demo42.adoc",
+      md(
+        "= A",
+        "[source,ts]",
+        "----",
+        ":::service",
+        "id: example",
+        ":::",
+        "----",
+        "[source,demo42]",
+        "----",
+        ":::service",
+        "id: real",
+        ":::",
+        "----",
+      ),
+      DEMO_DIALECT,
+    );
+    expect(blocks(document.nodes)).toMatchObject([
+      { attributes: { id: "real" }, inDemoFence: true },
+    ]);
+  });
+
+  test("an ignore directive inside a foreign fence is code too", () => {
+    const document = parseMarkdown(
+      "a.demo42.md",
+      md("# A", "```text", ":::ignore H001 example :::", "```"),
+      DEMO_DIALECT,
+    );
+    expect(document.nodes.some((node) => node.kind === "ignore")).toBe(false);
+  });
+});
+
 describe("parseAsciidoc", () => {
   test("yields the same nodes as the equivalent Markdown", () => {
     const markdown = md(
