@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { defineConfig } from "vite-plus";
 
 // Build one entry per subpath export, taken from package.json, so every export
@@ -9,8 +9,14 @@ const { exports } = JSON.parse(readFileSync(new URL("package.json", import.meta.
 };
 const entry = Object.fromEntries(
   Object.keys(exports)
-    .filter((path) => path !== "./package.json")
-    .map((path) => [`${path.slice(2)}/index`, `src/${path.slice(2)}/index.ts`]),
+    // Subpaths of files (`./web-react/styles.css`) are copied, not built.
+    .filter((path) => path !== "./package.json" && !/\.\w+$/.test(path))
+    .map((path) => [
+      `${path.slice(2)}/index`,
+      existsSync(`src/${path.slice(2)}/index.tsx`)
+        ? `src/${path.slice(2)}/index.tsx`
+        : `src/${path.slice(2)}/index.ts`,
+    ]),
 );
 
 export default defineConfig({
@@ -20,7 +26,9 @@ export default defineConfig({
     exports: false,
     // Mermaid stays a runtime dependency of the CLIs: bundling it breaks its
     // DOMPurify integration in Node.
-    deps: { neverBundle: ["mermaid"] },
+    // React stays the app's: /web-react uses the app's copy (optional peer).
+    deps: { neverBundle: ["mermaid", "react", "react-dom", /^react\//] },
+    copy: [{ from: "src/web-react/styles.css", to: "dist/web-react" }],
   },
   fmt: {},
   lint: {

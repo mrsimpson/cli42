@@ -136,6 +136,12 @@ the changes and history views it does not have today.
     dev server would have to process CSS modules inside `node_modules`.
   - arc42's Playwright tests match `toHaveClass(/panning/)` and `/pannable/` on the Mermaid view,
     so the prefixed names keep those words. Sidebars stay in the apps (`/sidebarOpen/`).
+- **The frontend is harmonized too; the lib's layout wins.** (Decided during Code, phase 3.)
+  The shared components bring their own look (the lib's stylesheet and theme tokens: the `--bg`,
+  `--text`, `--border`, `--diff-*`… custom properties arc42 and biz42 already share). An app does
+  not keep its former layout of these views through workarounds; where arc42 and biz42 differed
+  (fonts, spacing, a hint line), the shared version is used in both. Tests that address elements
+  by role, text or `data-testid` are unaffected; class names are not a contract.
 - **Scope of `/web-react`**: what is identical or nearly so in arc42 and biz42 (see *Notes → Web
   code shared today*): `useTheme`, `version`, `useHistory`, `useSnapshot`, `HistoryChain`,
   `HistoryEntryView`, `ChangesView`, `ChapterDiff`, `DiffSegment`, `MermaidDiagram`.
