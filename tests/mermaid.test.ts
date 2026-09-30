@@ -1,7 +1,7 @@
 // Mermaid's syntax check in Node, as arc42 (E0xx rules, @arc42/mermaid) and
 // biz42 (SIPOC, turtle and strategy maps as flowcharts) use it. Several cases
 // are regressions first caught downstream: Mermaid 11 sanitises labels with
-// DOMPurify, which Node lacks, so the parser retries without presentation text.
+// DOMPurify, which is unusable in Node until @cli42/lib prepares it.
 import { describe, expect, test } from "vite-plus/test";
 import {
   createMermaidParser,
@@ -116,7 +116,7 @@ describe("parseMermaid", () => {
   });
 });
 
-describe("labels and groups in Node (DOMPurify fallback)", () => {
+describe("labels and groups in Node (DOMPurify prepared)", () => {
   test.each([
     [
       "quoted labels, stadium shape, quoted subgraph title and edge label",
@@ -142,6 +142,11 @@ describe("labels and groups in Node (DOMPurify fallback)", () => {
     ["an unquoted cylinder label", "flowchart LR\n  a[(Orders)] --> b"],
     ["an unquoted circle label", "flowchart LR\n  a((Start)) --> b"],
     ["an unquoted rhombus label", "flowchart LR\n  a{Decide} --> b"],
+    // cli42#3 — space-style edge labels, which the old label stripping missed
+    [
+      "space-style edge labels",
+      "flowchart LR\n    actor_operator[Operator]\n    actor_llm_api[LLM API]\n\n    subgraph bb_system [Email Classification System]\n    end\n\n    actor_operator -- input files --> bb_system\n    bb_system -- LLM calls --> actor_llm_api",
+    ],
   ])("parses a flowchart with %s", async (_, source) => {
     await expect(flowchart(source)).resolves.toMatchObject(ok);
   });
