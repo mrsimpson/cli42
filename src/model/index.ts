@@ -19,5 +19,5 @@ export type {
   ParseWarning,
   SourceLocation,
 } from "./types.ts";
-export { buildIndex, relationsOf } from "./index-builder.ts";
+export { buildIndex, proseRelevanceOf, relationsOf } from "./index-builder.ts";
 export type { IndexEdge, MetaRelation, ReferenceIndex } from "./index-builder.ts";

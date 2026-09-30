@@ -14,6 +14,8 @@
  */
 
 import { GENERIC_CODES } from "../validator/codes.ts";
+import { proseMentions, vocabularyOf } from "./relevance.ts";
+import type { ProseMention, ProseRelevanceOptions } from "./relevance.ts";
 import type {
   DiagramOf,
   DiffAstNode,
@@ -58,6 +60,12 @@ export interface ElementChange<W extends WorkspaceSnapshot = WorkspaceSnapshot> 
   attributes: AttributeChange[];
   /** True when the heading or prose of the element's section differs between snapshots. */
   proseChanged: boolean;
+  /**
+   * For an unchanged element whose prose changed, with
+   * {@link DiffOptions.proseRelevance}: the model terms the changed words name.
+   * Empty when the change concerns nothing the model states.
+   */
+  proseMentions?: ProseMention[];
   base?: Location;
   head?: Location;
   section: SectionRef;
@@ -107,6 +115,12 @@ export interface DiffOptions {
    * may hold blocks.
    */
   rejectPreambleBlocks?: boolean;
+  /**
+   * Judge prose changes of unchanged blocks by what they name (see
+   * {@link ElementChange.proseMentions}). Without it, every prose change of a
+   * block's section counts.
+   */
+  proseRelevance?: ProseRelevanceOptions;
 }
 
 /** @internal Shared with the diff view; not part of the public API. */
@@ -215,10 +229,12 @@ export class SnapshotIndex<W extends WorkspaceSnapshot = WorkspaceSnapshot> {
   readonly sectionsByFile = new Map<string, Section<NodeOf<W>>[]>();
   readonly elements = new Map<string, ElementOf<W>>();
   readonly diagrams = new Map<string, DiagramOf<W>>();
+  readonly edges: readonly EdgeOf<W>[];
   private readonly options: DiffOptions;
 
   constructor(payload: W, side: "base" | "head", options: DiffOptions = {}) {
     this.options = options;
+    this.edges = payload.edges;
     for (const document of payload.documents) {
       const sections = sectionsOf(document, options) as Section<NodeOf<W>>[];
       this.sectionsByFile.set(document.filePath, sections);
@@ -382,8 +398,11 @@ function diffElements<W extends WorkspaceSnapshot>(
   base: SnapshotIndex<W>,
   head: SnapshotIndex<W>,
   sections: SectionMatching,
+  options: DiffOptions,
 ): ElementChange<W>[] {
   const changes: ElementChange<W>[] = [];
+  const everyElement = [...head.elements.values(), ...base.elements.values()];
+  const everyEdge = [...head.edges, ...base.edges];
   for (const [id, headElement] of head.elements) {
     const headSection = head.sectionAt(headElement.loc.file, headElement.loc.line);
     const baseElement = base.elements.get(id);
@@ -405,12 +424,22 @@ function diffElements<W extends WorkspaceSnapshot>(
     const proseChanged =
       sections.headOf(baseSection) !== headSection || sectionTextChanged(baseSection, headSection);
     if (attributes.length === 0 && !proseChanged) continue;
+    const relevance = options.proseRelevance;
+    const mentions =
+      relevance && attributes.length === 0
+        ? proseMentions(
+            `${baseSection.title}\n${baseSection.prose}`,
+            `${headSection.title}\n${headSection.prose}`,
+            vocabularyOf(headElement, everyElement, everyEdge, relevance),
+          )
+        : undefined;
     changes.push({
       id,
       kind: headElement.kind,
       status: attributes.length > 0 ? "modified" : "unchanged",
       attributes,
       proseChanged,
+      ...(mentions ? { proseMentions: mentions } : {}),
       base: location(baseElement.loc),
       head: location(headElement.loc),
       section: headSection.ref,
@@ -556,7 +585,7 @@ export function diffWorkspaces<W extends WorkspaceSnapshot>(
   const baseIndex = new SnapshotIndex(base, "base", options);
   const headIndex = new SnapshotIndex(head, "head", options);
   const sections = new SectionMatching(baseIndex, headIndex);
-  const elements = diffElements(baseIndex, headIndex, sections);
+  const elements = diffElements(baseIndex, headIndex, sections, options);
   const diagrams = diffDiagrams(baseIndex, headIndex);
   const proseSections = diffProseSections(baseIndex, headIndex, sections);
   return {

@@ -108,6 +108,10 @@ export const TeamSchema = z
     id: z.string().min(1).meta({ description: "Unique identifier" }),
     title: z.string().min(1).meta({ description: "Name of the team" }),
     owns: splitListSchema.meta({ description: "Comma-separated ids of the services it owns" }),
+    mission: z
+      .string()
+      .optional()
+      .meta({ description: "What the team is for, in a sentence", freeText: true }),
   })
   .meta({
     description: "A team that owns services.",
