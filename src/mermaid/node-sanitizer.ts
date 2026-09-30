@@ -22,8 +22,7 @@ interface Purify {
  * Give Mermaid's DOMPurify (the ES module instance Mermaid imports) what the
  * parser needs when there is no DOM. Resolves `dompurify` from Mermaid's own
  * location, so it is the same instance in any installation layout. Throws
- * when it cannot be resolved; the caller falls back to parsing without
- * presentation text.
+ * when it cannot be resolved — Mermaid could not parse labels in Node.
  */
 export async function prepareSanitizerForNode(): Promise<void> {
   if (typeof document !== "undefined") return;
