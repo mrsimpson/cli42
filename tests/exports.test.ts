@@ -21,6 +21,7 @@ const MODULES = {
   "text-diff": () => import("@cli42/lib/text-diff"),
   validator: () => import("@cli42/lib/validator"),
   vite: () => import("@cli42/lib/vite"),
+  web: () => import("@cli42/lib/web"),
 } as const;
 
 /** Runtime values the consumers import from each subpath. */
@@ -78,6 +79,16 @@ const CONSUMED: Record<keyof typeof MODULES, string[]> = {
   "text-diff": ["diffTokens", "markHtmlChanges", "wordTokens"],
   validator: ["createValidator"],
   vite: ["asciidoctorBrowserPaths"],
+  web: [
+    "DocumentRoutes",
+    "groupNodes",
+    "linkIds",
+    "loadSnapshot",
+    "parseRoute",
+    "readHistoryFile",
+    "slug",
+    "toHistoryPearls",
+  ],
 };
 
 describe("public surface", () => {
