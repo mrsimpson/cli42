@@ -3,5 +3,5 @@
 // introspection of schemas and their `.meta()`.
 export { z } from "zod";
 export { splitListRequiredSchema, splitListSchema } from "./lists.ts";
-export { chaptersOf, deriveFields, metaOf, shapeOf } from "./introspection.ts";
+export { chaptersOf, deriveFields, freeTextFields, metaOf, shapeOf } from "./introspection.ts";
 export type { BlockSchema, CrossRefMeta, FieldMeta } from "./introspection.ts";

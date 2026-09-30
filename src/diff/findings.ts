@@ -12,13 +12,20 @@ export interface ConsistencyFinding {
 
 function consistencyFinding(change: ElementChange): ConsistencyFinding | undefined {
   if (change.status === "unchanged") {
+    // Judged by what the changed words name: prose that states nothing of the
+    // model (features, context, wording) may change on its own.
+    const mentions = change.proseMentions;
+    if (mentions && mentions.length === 0) return undefined;
+    const named = mentions
+      ? ` — it names ${mentions.map((mention) => `'${mention.term}'`).join(", ")}`
+      : "";
     return {
       kind: "prose-without-block-change",
       severity: "warning",
       file: change.head!.file,
       line: change.head!.line,
       elementId: change.id,
-      message: `Section prose changed without changing block '${change.id}'.`,
+      message: `Section prose changed without changing block '${change.id}'${named}.`,
     };
   }
   if (change.proseChanged) return undefined;

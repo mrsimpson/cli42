@@ -1,5 +1,5 @@
 import type { z } from "zod";
-import { metaOf } from "../schema/introspection.ts";
+import { freeTextFields, metaOf } from "../schema/introspection.ts";
 import type { CrossRefMeta } from "../schema/introspection.ts";
 
 function crossRefsOf(schema: z.ZodType): CrossRefMeta[] {
@@ -108,4 +108,27 @@ export function relationsOf<K extends string>(
         : [{ from: kind, to: referenced, ...common }];
     }),
   );
+}
+
+/**
+ * What the semantic diff needs from a language's schemas to judge prose
+ * changes (`DiffOptions.proseRelevance` in `@cli42/lib/diff`): the free-text
+ * attributes (`.meta({ freeText: true })`) and which element kinds the
+ * meta-model relates.
+ */
+export function proseRelevanceOf(schemas: Readonly<Record<string, z.ZodType>>): {
+  freeText: (kind: string, field: string) => boolean;
+  relates: (kind: string, other: string) => boolean;
+} {
+  const pairs = new Set<string>();
+  for (const relation of relationsOf(schemas)) {
+    for (const to of relation.to) {
+      pairs.add(`${relation.from}\0${to}`);
+      pairs.add(`${to}\0${relation.from}`);
+    }
+  }
+  return {
+    freeText: freeTextFields(schemas),
+    relates: (kind, other) => pairs.has(`${kind}\0${other}`),
+  };
 }

@@ -109,3 +109,25 @@ export function chaptersOf<K extends string>(
     }),
   ) as Record<K, number>;
 }
+
+/**
+ * Which attributes of a schema map hold sentences rather than facts: fields
+ * marked `.meta({ freeText: true })` (e.g. a description). The semantic diff
+ * does not treat their words as facts of the element (see
+ * `DiffOptions.proseRelevance` in `@cli42/lib/diff`).
+ */
+export function freeTextFields(
+  schemas: Readonly<Record<string, z.ZodType>>,
+): (kind: string, field: string) => boolean {
+  const fields = new Map(
+    Object.entries(schemas).map(([kind, schema]) => [
+      kind,
+      new Set(
+        Object.entries(shapeOf(schema as BlockSchema))
+          .filter(([, field]) => metaOf<{ freeText: boolean }>(field)?.freeText === true)
+          .map(([name]) => name),
+      ),
+    ]),
+  );
+  return (kind, field) => fields.get(kind)?.has(field) ?? false;
+}

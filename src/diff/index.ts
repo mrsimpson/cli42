@@ -23,6 +23,7 @@ export type {
   SectionContent,
 } from "./diff-view.ts";
 export { changeCounts, consistencyFindings, isSemanticChange } from "./findings.ts";
+export type { ProseMention, ProseRelevanceOptions } from "./relevance.ts";
 export type { ConsistencyFinding } from "./findings.ts";
 export type {
   DiagramOf,
