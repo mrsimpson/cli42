@@ -88,11 +88,21 @@ export const diff = (base: WorkspacePayload, head: WorkspacePayload): Architectu
 pnpm install
 pnpm run check   # format, lint, type check
 pnpm run build   # dist/ — what consumers import
+pnpm test        # builds dist/, then runs tests/ against it
 ```
 
-The behavior is covered by the test suites of arc42-language and biz42, which
-exercise every export through their CLIs. To try a change there before it is
-released, override the dependency with a link in the consumer's
+The tests in `tests/` are black-box: they import only the published subpaths
+(`@cli42/lib/<subpath>`, which resolve to `dist/` through the package's own
+`exports`), so they exercise exactly what npm consumers get. They drive a small
+language, `demo42` (`tests/support/demo42.ts`), wired to the library the way
+arc42-language and biz42 wire theirs — dialect, notations, schemas, builder,
+index, generic and own rules, validator with Mermaid's syntax check — and cover
+the diff and Git access on a throwaway repository. `tests/exports.test.ts` and
+`tests/consumer-types.ts` pin every value and type the two consumers import;
+update them when a consumer starts importing something new. A bug found
+downstream gets its regression test here, next to the code that fixes it.
+
+To try a change in a consumer before it is released, override the dependency with a link in the consumer's
 `pnpm-workspace.yaml` (`overrides: { "@cli42/lib": "link:../cli42" }`). A link
 brings the working copy's own `node_modules/mermaid`, so the web app bundles
 Mermaid twice; check bundle sizes with the Git or npm dependency.

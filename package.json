@@ -89,9 +89,10 @@
   "scripts": {
     "build": "vp pack",
     "prepare": "vp pack",
+    "pretest": "vp pack",
     "test": "vp test",
     "check": "vp check",
-    "ready": "pnpm run check && pnpm run test && pnpm run build"
+    "ready": "pnpm run build && pnpm run check && pnpm test"
   },
   "dependencies": {
     "@asciidoctor/core": "^4.1.0",
