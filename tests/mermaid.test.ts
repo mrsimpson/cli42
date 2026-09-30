@@ -4,6 +4,7 @@
 // DOMPurify, which is unusable in Node until @cli42/lib prepares it.
 import { describe, expect, test } from "vite-plus/test";
 import {
+  MermaidSanitizerError,
   createMermaidParser,
   mermaidSyntaxParser,
   parseMermaid,
@@ -180,5 +181,26 @@ describe("createMermaidParser", () => {
       notation: "sipoc",
       message: "Expected a flowchart Mermaid diagram header.",
     });
+  });
+});
+
+describe("MermaidSanitizerError", () => {
+  test("says what to change and keeps the original error as its cause", () => {
+    const cause = new TypeError("purify_default.addHook is not a function");
+    const error = new MermaidSanitizerError(cause);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe("MermaidSanitizerError");
+    expect(error.cause).toBe(cause);
+    expect(error.message).toBe(
+      "Mermaid cannot parse diagrams here: its DOMPurify is unusable (purify_default.addHook is not a function) — keep mermaid a runtime dependency of the CLI instead of bundling it, so @cli42/lib can prepare the DOMPurify that Mermaid loads",
+    );
+  });
+
+  // A syntax error quotes the diagram's source, which may name anything.
+  test.each([
+    ["a label about purifying", "flowchart LR\n  a[Purify water] -->"],
+    ["a label naming DOMPurify's API", "flowchart LR\n  a[DOMPurify.sanitize] -->"],
+  ])("a syntax error in %s stays a syntax error of the diagram", async (_, source) => {
+    await expect(flowchart(source)).resolves.toMatchObject({ ok: false });
   });
 });
