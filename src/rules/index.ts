@@ -2,8 +2,10 @@
 // model, independent of the domain. The lib owns their codes (see
 // GENERIC_CODES) and metadata; a language adds its own docs fields (e.g. the
 // chapter a rule belongs to). Messages read "problem — what to do".
+import { idSchemeOf } from "../schema/ids.ts";
 import { GENERIC_CODES } from "../validator/codes.ts";
 import type { Diagnostic, Rule, RuleMeta } from "../validator/index.ts";
+import type { z } from "zod";
 
 interface Located {
   loc: { file: string; line: number };
@@ -159,6 +161,18 @@ const META = {
       description: "Ignore directive targets an error — errors must be fixed, not ignored",
       rationale:
         "Errors are structural: the affected block is excluded from the model or the model is inconsistent. Only warnings and hints describe judgment calls an author can accept deliberately.",
+      recommended: true,
+    },
+  },
+  idScheme: {
+    code: GENERIC_CODES.idScheme,
+    severity: "warning",
+    type: "suggestion",
+    docs: {
+      description:
+        "Element id does not follow its kind's id scheme — start it with the kind's prefix (e.g. 'risk-')",
+      rationale:
+        "An id that carries its kind's prefix says what it refers to wherever it appears: in references, in diagrams and in prose. Tools rely on the same scheme to recognise ids in text — diagram rules check them, and the web view links them.",
       recommended: true,
     },
   },
@@ -409,6 +423,34 @@ export const rejectedIgnoreRule: Rule<GenericRuleWorkspace, unknown, unknown> = 
   check: () => [],
 };
 
+/** Each element id follows the id scheme its kind declares (`idPrefixes` in the schema's meta). */
+export function idSchemeRule(
+  schemas: Readonly<Record<string, z.ZodType>>,
+): Rule<GenericRuleWorkspace, unknown, unknown> {
+  const scheme = idSchemeOf(schemas);
+  const quoted = (prefixes: readonly string[]) => prefixes.map((prefix) => `'${prefix}-'`);
+  return {
+    meta: META.idScheme,
+    check(workspace) {
+      const diagnostics: Diagnostic[] = [];
+      for (const element of workspace.elements) {
+        if (scheme.follows(element.kind, element.id)) continue;
+        const [canonical, ...others] = quoted(scheme.prefixes.get(element.kind) ?? []);
+        const alternatives = others.length > 0 ? ` (or ${others.join(", ")})` : "";
+        diagnostics.push(
+          finding(
+            META.idScheme,
+            `${element.kind} id '${element.id}' does not follow its id scheme — start it with ${canonical}${alternatives}`,
+            element.loc.file,
+            element.loc.line,
+          ),
+        );
+      }
+      return diagnostics;
+    },
+  };
+}
+
 export interface GenericRuleOptions<C> {
   /** The chapter each element kind belongs to (EG03). */
   chapters: Readonly<Record<string, number>>;
@@ -418,6 +460,11 @@ export interface GenericRuleOptions<C> {
   fenceFlag: string;
   /** How the fence is called in messages, e.g. "```arc42 fence" (WG05). */
   fenceDescription: (context?: C) => string;
+  /**
+   * The language's element schemas (WG08). A language that passes them gets
+   * the id scheme check for every kind that declares `idPrefixes`.
+   */
+  schemas?: Readonly<Record<string, z.ZodType>>;
 }
 
 /** All generic rules, in code order. A language adds its own docs fields to their metadata. */
@@ -436,6 +483,7 @@ export function genericRules<C>(
     blockNotInFenceRule<C>(options),
     staleIgnoreRule,
     rejectedIgnoreRule,
+    ...(options.schemas ? [idSchemeRule(options.schemas)] : []),
   ];
 }
 

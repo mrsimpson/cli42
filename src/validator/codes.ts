@@ -26,4 +26,6 @@ export const GENERIC_CODES = {
   staleIgnore: "WG06",
   /** An ignore directive targets an error, which cannot be suppressed. */
   rejectedIgnore: "WG07",
+  /** An element id does not follow its kind's id scheme. */
+  idScheme: "WG08",
 } as const;
