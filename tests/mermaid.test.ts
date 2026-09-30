@@ -43,14 +43,32 @@ describe("parseMermaid", () => {
     await expect(flowchart("graph TD\n A-->B")).resolves.toMatchObject(ok);
   });
 
-  // Known bug: every class diagram fails in Node with "DOMPurify.addHook is
-  // not a function" — Mermaid sanitises class names, and there are no labels
-  // for the fallback to strip — so `arc42 validate` / `biz42 validate` report
-  // E010 on valid class diagrams. Remove `.fails` when it is fixed.
-  test.fails("parses class diagrams", async () => {
+  test("parses class diagrams", async () => {
     await expect(
       parseMermaid({ notation: "class", source: "classDiagram\n  class Order\n  Order --> Item" }),
     ).resolves.toMatchObject({ ok: true, notation: "class" });
+  });
+
+  test("parses class diagrams with members and relations", async () => {
+    await expect(
+      parseMermaid({
+        notation: "class",
+        source:
+          'classDiagram\n  class Order {\n    +String id\n    +total() Money\n  }\n  Order <|-- RushOrder\n  Order "1" --> "*" Item : contains',
+      }),
+    ).resolves.toMatchObject({ ok: true, diagramType: "classDiagram" });
+  });
+
+  test("reports a syntax error in a class diagram", async () => {
+    await expect(
+      parseMermaid({ notation: "class", source: "classDiagram\n  Order -->" }),
+    ).resolves.toMatchObject({ ok: false, notation: "class" });
+  });
+
+  test("reports a broken node label, which stripping labels would hide", async () => {
+    await expect(flowchart("flowchart LR\n  a[Checkout --> b")).resolves.toMatchObject({
+      ok: false,
+    });
   });
 
   test("auto accepts any diagram type", async () => {
