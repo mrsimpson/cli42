@@ -5,6 +5,7 @@ import type {
   MermaidSyntaxParser,
 } from "./model.ts";
 import { prepareSanitizerForNode } from "./node-sanitizer.ts";
+import { MermaidSanitizerError, isSanitizerError } from "./sanitizer-error.ts";
 
 let mermaidPromise: ReturnType<typeof importMermaid> | undefined;
 
@@ -14,7 +15,7 @@ async function importMermaid() {
   try {
     await prepareSanitizerForNode();
   } catch (error) {
-    throw sanitizerError(normalizeError(error));
+    throw new MermaidSanitizerError(error);
   }
   const { default: instance } = await import("mermaid");
   return instance;
@@ -52,20 +53,6 @@ function hasExpectedHeader(source: string, notation: MermaidGrammar): boolean {
 }
 
 /**
- * A DOMPurify error means Mermaid's sanitizer was not prepared for Node — the
- * setup is wrong, not the diagram. Typically a CLI bundles Mermaid, and with
- * it a DOMPurify copy that node-sanitizer.ts cannot reach.
- */
-const SANITIZER_UNUSABLE = /purify\w*\.\w+ is not a function/iu;
-
-function sanitizerError(message: string): Error {
-  return new Error(
-    `Mermaid cannot parse in Node: its DOMPurify is not prepared (${message}). ` +
-      "Keep mermaid a runtime dependency of the CLI instead of bundling it.",
-  );
-}
-
-/**
  * A syntax parser backed by Mermaid's production parser for a language's own
  * diagram notations: `grammars` maps each notation to the Mermaid grammar
  * that checks it (e.g. a SIPOC diagram is a flowchart). Results carry the
@@ -96,9 +83,9 @@ export function createMermaidParser<N extends string>(
         const parsed = await parser.parse(source, { suppressErrors: false });
         return { ok: true, notation, diagramType: parsed.diagramType };
       } catch (error) {
-        const message = normalizeError(error);
-        if (SANITIZER_UNUSABLE.test(message)) throw sanitizerError(message);
-        return { ok: false, notation, message };
+        // Not the diagram's fault: raised with what to change, the original as its cause.
+        if (isSanitizerError(error)) throw new MermaidSanitizerError(error);
+        return { ok: false, notation, message: normalizeError(error) };
       }
     },
   };

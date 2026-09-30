@@ -26,7 +26,8 @@ export type MermaidParseResult<N extends string = MermaidGrammar> =
 /**
  * Stable parser boundary consumed by semantic validators. A diagram's syntax
  * error is a failure result; an environment that cannot run Mermaid's parser
- * (e.g. Mermaid bundled into a CLI) rejects instead.
+ * (e.g. Mermaid bundled into a CLI) rejects with a MermaidSanitizerError that
+ * says what to change.
  */
 export interface MermaidSyntaxParser<N extends string = MermaidGrammar> {
   parse(request: MermaidParseRequest<N>): Promise<MermaidParseResult<N>>;

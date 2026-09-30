@@ -9,5 +9,6 @@ export type {
   MermaidSyntaxParser,
 } from "./model.ts";
 export { createMermaidParser, mermaidSyntaxParser, parseMermaid, warmMermaid } from "./parser.ts";
+export { MermaidSanitizerError } from "./sanitizer-error.ts";
 export { mermaidSyntaxCheck } from "./syntax-check.ts";
 export type { MermaidSyntaxCheckOptions, MermaidSyntaxTarget } from "./syntax-check.ts";
