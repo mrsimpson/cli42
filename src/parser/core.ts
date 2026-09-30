@@ -72,8 +72,12 @@ export function parseLines<D, F extends string>(
     source: string[];
   } | null = null;
   let openBareMermaid: { source: string[]; startLine: number } | null = null;
-  // A source annotation seen, waiting for its delimiter: the language fence or a bare Mermaid fence.
-  let annotated: "language" | "mermaid" | null = null;
+  // A source annotation seen, waiting for its delimiter: the language fence, a
+  // bare Mermaid fence, or a code listing of another language.
+  let annotated: "language" | "mermaid" | "foreign" | null = null;
+  // Inside a code fence of another language (e.g. ```ts): its lines are prose
+  // (the renderer shows the code), never blocks or directives.
+  let foreignFence = false;
 
   let inFence = false;
 
@@ -83,6 +87,12 @@ export function parseLines<D, F extends string>(
     const token = tokenOf(line);
 
     if (token.t === "skip") continue;
+
+    if (foreignFence) {
+      if (token.t === "delim") foreignFence = false;
+      nodes.push({ kind: "prose", text: line, line: lineNo });
+      continue;
+    }
 
     if (openBareMermaid) {
       if (token.t === "delim") {
@@ -191,10 +201,21 @@ export function parseLines<D, F extends string>(
         annotated = "mermaid";
         continue;
       }
+      if (token.t === "annotation" && !inFence && openBlock === null) {
+        annotated = "foreign";
+        nodes.push({ kind: "prose", text: line, line: lineNo });
+        continue;
+      }
       if (annotated !== null && token.t === "delim") {
-        if (annotated === "language") inFence = true;
-        else openBareMermaid = { source: [], startLine: lineNo };
+        const kind = annotated;
         annotated = null;
+        if (kind === "foreign") {
+          foreignFence = true;
+          nodes.push({ kind: "prose", text: line, line: lineNo });
+          continue;
+        }
+        if (kind === "language") inFence = true;
+        else openBareMermaid = { source: [], startLine: lineNo };
         continue;
       }
       // An annotation is only one when its delimiter follows (blank lines aside).
@@ -208,6 +229,14 @@ export function parseLines<D, F extends string>(
       // still display it, and a rule warns about the missing :::diagram block.
       if (token.t === "open" && isMermaid(token.info) && !inFence) {
         openBareMermaid = { source: [], startLine: lineNo };
+        continue;
+      }
+
+      // A code fence of another language (```ts, ```markdown …): examples of
+      // the DSL inside it are code, not the model.
+      if (token.t === "open" && !inFence && openBlock === null) {
+        foreignFence = true;
+        nodes.push({ kind: "prose", text: line, line: lineNo });
         continue;
       }
     }
