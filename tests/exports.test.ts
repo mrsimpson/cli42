@@ -22,6 +22,7 @@ const MODULES = {
   validator: () => import("@cli42/lib/validator"),
   vite: () => import("@cli42/lib/vite"),
   web: () => import("@cli42/lib/web"),
+  "web-react": () => import("@cli42/lib/web-react"),
 } as const;
 
 /** Runtime values the consumers import from each subpath. */
@@ -89,6 +90,17 @@ const CONSUMED: Record<keyof typeof MODULES, string[]> = {
     "slug",
     "toHistoryPearls",
   ],
+  "web-react": [
+    "ChangesView",
+    "HistoryChain",
+    "HistoryEntryView",
+    "MermaidDiagram",
+    "WebViewProvider",
+    "useHistory",
+    "useSnapshot",
+    "useTheme",
+    "useVersion",
+  ],
 };
 
 describe("public surface", () => {
@@ -100,7 +112,7 @@ describe("public surface", () => {
     };
     expect(
       Object.keys(exports)
-        .filter((path) => path !== "./package.json")
+        .filter((path) => path !== "./package.json" && !path.endsWith(".css"))
         .map((path) => path.slice(2))
         .sort(),
     ).toEqual(Object.keys(MODULES).sort());
