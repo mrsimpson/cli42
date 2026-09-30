@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vite-plus/test";
-import { formatError } from "./index.ts";
+import { formatError } from "@cli42/lib/cli";
 
 describe("formatError", () => {
   test("accepts a listed format", () => {
