@@ -43,18 +43,71 @@ function hasExpectedHeader(source: string, notation: MermaidGrammar): boolean {
 }
 
 /**
- * Mermaid's Node parser currently reaches its browser sanitizer for some
- * flowchart and sequence labels. Keep the structural parse useful in Node by
- * retrying those sources without presentation text when the sanitizer is not
- * available. The original source is always parsed first.
+ * Strips presentation text (node labels, subgraph titles, edge labels) from a
+ * Mermaid source so its structure can be validated in Node environments where
+ * DOMPurify is not available.
+ *
+ * **Design intent — why regexes and not a DOM shim:**
+ * Mermaid 11.x calls `DOMPurify.addHook` while parsing label text in Node.
+ * The natural fix would be to supply a jsdom window so DOMPurify has a DOM to
+ * work with. We deliberately avoid that because:
+ *
+ * 1. jsdom is a heavy dependency (~10 MB) and introduces its own version-pinning
+ *    surface against Mermaid internals.
+ * 2. The linter only needs to validate *structure* (node IDs, edges, subgraph
+ *    nesting) — it never renders or sanitises label text itself.
+ * 3. Stripping labels before the retry is semantically correct: the stripped
+ *    source is used only for the structural parse; the original source is always
+ *    used for rendering and semantic validation.
+ *
+ * The alternative of catching the error and returning a "please quote your
+ * labels" message was rejected because it would produce false-positive lint
+ * failures for diagrams that are valid Mermaid and render correctly in browsers.
+ *
+ * The regex chain is ordered so compound delimiters (e.g. `[[`, `((`) are
+ * matched before their single-character subsets (`[`, `(`) to avoid partial
+ * matches leaving syntax fragments in the output.
+ *
+ * The original source is always parsed first; this function is only called
+ * after a DOMPurify error is detected.
  */
 function withoutBrowserText(source: string, notation: MermaidGrammar): string {
   if (notation === "flowchart") {
     return (
       source
+        // WHY: Mermaid 11.17.2 calls DOMPurify for both quoted and unquoted
+        // subgraph titles in Node environments. Strip both forms so the
+        // structural subgraph grammar can still be validated.
+        // Quoted form:  subgraph id ["Title"]
         .replace(/^(\s*subgraph\s+\S+)\s*\["[^"\n]*"\]/gmu, "$1")
-        .replace(/\(\["[^"\n]*"\]\)/gu, "")
+        // Unquoted form: subgraph id [Title]
+        .replace(/^(\s*subgraph\s+\S+)\s*\[[^\]\n]+\]/gmu, "$1")
+        // Node shapes — compound forms must come before their simpler subsets.
+        // ([text]) — stadium
+        .replace(/\(\[[^\]\n]+\]\)/gu, "")
+        // [(text)] — cylinder
+        .replace(/\[\([^)\n]+\)\]/gu, "")
+        // ((text)) — circle
+        .replace(/\(\([^)\n]+\)\)/gu, "")
+        // [[text]] — subroutine
+        .replace(/\[\[[^\]\n]+\]\]/gu, "")
+        // {{text}} — hexagon
+        .replace(/\{\{[^}\n]+\}\}/gu, "")
+        // {text} — rhombus
+        .replace(/\{[^}\n]+\}/gu, "")
+        // [/text/] or [\text\] — parallelogram
+        .replace(/\[\/[^\n]*\/\]/gu, "")
+        .replace(/\[\\[^\n]*\\\]/gu, "")
+        // ["text"] — quoted rect label
         .replace(/\["[^"\n]*"\]/gu, "")
+        // [text] — unquoted rect label (must come after [[]], [()], [/])
+        .replace(/\[[^\]\n]+\]/gu, "")
+        // ("text") — quoted round label
+        .replace(/\("([^"\n]*)"\)/gu, "")
+        // (text) — unquoted round label (must come after (()), ([]))
+        .replace(/\([^)\n]+\)/gu, "")
+        // >text] — asymmetric
+        .replace(/>[^\]\n]+\]/gu, "")
         // Strip quoted pipe labels |"text"|
         .replace(/\|"[^"\n]*"\|/gu, "")
         // WHY: Mermaid 11.17.2 also calls DOMPurify when sanitizing unquoted
