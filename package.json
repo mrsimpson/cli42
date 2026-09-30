@@ -24,6 +24,10 @@
       "types": "./dist/asciidoc/index.d.mts",
       "default": "./dist/asciidoc/index.mjs"
     },
+    "./cli": {
+      "types": "./dist/cli/index.d.mts",
+      "default": "./dist/cli/index.mjs"
+    },
     "./diff": {
       "types": "./dist/diff/index.d.mts",
       "default": "./dist/diff/index.mjs"
