@@ -4,11 +4,19 @@ import type {
   MermaidParseResult,
   MermaidSyntaxParser,
 } from "./model.ts";
+import { prepareSanitizerForNode } from "./node-sanitizer.ts";
 
 let mermaidPromise: ReturnType<typeof importMermaid> | undefined;
 
-function importMermaid() {
-  return import("mermaid").then(({ default: instance }) => instance);
+async function importMermaid() {
+  try {
+    await prepareSanitizerForNode();
+  } catch {
+    // Parse as before: DOMPurify errors fall back to the source without
+    // presentation text (withoutBrowserText).
+  }
+  const { default: instance } = await import("mermaid");
+  return instance;
 }
 
 function getMermaid() {
@@ -69,7 +77,9 @@ function hasExpectedHeader(source: string, notation: MermaidGrammar): boolean {
  * matches leaving syntax fragments in the output.
  *
  * The original source is always parsed first; this function is only called
- * after a DOMPurify error is detected.
+ * after a DOMPurify error is detected. Since Mermaid's DOMPurify is prepared
+ * for Node (see node-sanitizer.ts), that happens only when the preparation
+ * failed — this remains the fallback for it.
  */
 function withoutBrowserText(source: string, notation: MermaidGrammar): string {
   if (notation === "flowchart") {
