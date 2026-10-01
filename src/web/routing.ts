@@ -182,3 +182,51 @@ export class DocumentRoutes {
     return this.documentHref(path, slug(heading));
   }
 }
+
+/** Links to the elements of a workspace. */
+export interface ElementLinks {
+  /** The link to an element, opened in its document; undefined for an unknown id. */
+  elementHref(id: string): string | undefined;
+}
+
+/**
+ * The links of one workspace: documents by their routes, elements by the
+ * document that defines them. Also the id set `linkIds` needs (`has`).
+ */
+export class WorkspaceLinks implements ElementLinks {
+  readonly routes: DocumentRoutes;
+  private readonly files = new Map<string, string>();
+
+  constructor(
+    documents: readonly string[] | DocumentRoutes,
+    elements: Iterable<{ id: string; loc: { file: string } }>,
+  ) {
+    this.routes = documents instanceof DocumentRoutes ? documents : new DocumentRoutes(documents);
+    for (const element of elements) {
+      if (!this.files.has(element.id)) this.files.set(element.id, element.loc.file);
+    }
+  }
+
+  /** Whether an element with this id exists. */
+  has(id: string): boolean {
+    return this.files.has(id);
+  }
+
+  /** The document path of an element. */
+  fileOf(id: string): string | undefined {
+    return this.files.get(id);
+  }
+
+  elementHref(id: string): string | undefined {
+    const file = this.files.get(id);
+    return file === undefined ? undefined : this.routes.elementHref(file, id);
+  }
+
+  documentHref(path: string, anchor?: string | null): string {
+    return this.routes.documentHref(path, anchor);
+  }
+
+  headingHref(path: string, heading: string): string {
+    return this.routes.headingHref(path, heading);
+  }
+}

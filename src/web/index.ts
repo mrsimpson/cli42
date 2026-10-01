@@ -2,8 +2,15 @@
 // grouping of document nodes, linking of id mentions in rendered prose, and
 // the history format (also read by the CLIs, which write and serve it).
 export { slug } from "./slug.ts";
-export { DocumentRoutes, changesHref, formatRoute, historyHref, parseRoute } from "./routing.ts";
-export type { Route, RouteOptions } from "./routing.ts";
+export {
+  DocumentRoutes,
+  WorkspaceLinks,
+  changesHref,
+  formatRoute,
+  historyHref,
+  parseRoute,
+} from "./routing.ts";
+export type { ElementLinks, Route, RouteOptions } from "./routing.ts";
 export { groupNodes } from "./group.ts";
 export type { GroupOptions, RenderGroup } from "./group.ts";
 export { linkIds } from "./link-ids.ts";

@@ -17,6 +17,7 @@ import {
   slug,
   toHistoryPearls,
   toJsonLines,
+  WorkspaceLinks,
 } from "@cli42/lib/web";
 import type { Route } from "@cli42/lib/web";
 
@@ -303,5 +304,21 @@ describe("history format", () => {
     expect(snapshot.paths).toEqual([]);
     await loadSnapshot(source, "c", load);
     expect(loads).toBe(1);
+  });
+});
+
+describe("WorkspaceLinks", () => {
+  test("links elements through the document that defines them", () => {
+    const links = new WorkspaceLinks(
+      ["/ws/05-blocks.md", "/ws/03-context.md"],
+      [{ id: "bb-cli", loc: { file: "/ws/05-blocks.md" } }],
+    );
+    expect(links.has("bb-cli")).toBe(true);
+    expect(links.elementHref("bb-cli")).toBe("#05-blocks.md:el-bb-cli");
+    expect(links.elementHref("bb-none")).toBeUndefined();
+    expect(links.documentHref("/ws/03-context.md")).toBe("#03-context.md");
+    expect(linkIds("<p>bb-cli</p>", { ids: links, href: (id) => links.elementHref(id) })).toContain(
+      'href="#05-blocks.md:el-bb-cli"',
+    );
   });
 });
