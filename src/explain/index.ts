@@ -20,10 +20,14 @@ export interface BlockGuidance {
   optionalFields: ExplainFieldResult[];
   crossRefs: ExplainCrossRefResult[];
   authoringTips: string[];
+  /** The id scheme, when the kind declares one: ids start with a prefix and "-". */
+  idScheme?: { prefixes: string[]; bareId: boolean };
 }
 
 interface SchemaMeta {
   description?: string;
+  idPrefixes?: string[];
+  bareId?: boolean;
   crossRefs?: CrossRefMeta[];
   authoringTips?: string[];
 }
@@ -45,7 +49,18 @@ export function blockGuidance(schema: z.ZodType, name: string): BlockGuidance {
       cardinality,
     })),
     authoringTips: meta.authoringTips ?? [],
+    ...(meta.idPrefixes?.length
+      ? { idScheme: { prefixes: [...meta.idPrefixes], bareId: meta.bareId === true } }
+      : {}),
   };
+}
+
+/** "start it with 'cap-' (or 'capability-')" — how an id of a scheme begins. */
+function idSchemeText(scheme: { prefixes: string[]; bareId: boolean }): string {
+  const [canonical, ...others] = scheme.prefixes.map((prefix) => `'${prefix}-'`);
+  const alternatives = others.length > 0 ? ` (or ${others.join(", ")})` : "";
+  const bare = scheme.bareId ? `, or is '${scheme.prefixes[0]}' itself` : "";
+  return `starts with ${canonical}${alternatives}${bare}`;
 }
 
 /** Render guidance as text below its heading line. */
@@ -54,6 +69,10 @@ export function formatBlockGuidance(heading: string, guidance: BlockGuidance): s
   lines.push(heading);
   lines.push("");
   lines.push(`  ${guidance.description}`);
+  if (guidance.idScheme) {
+    lines.push("");
+    lines.push(`  Id: ${idSchemeText(guidance.idScheme)}`);
+  }
 
   const fieldLines = (title: string, fields: ExplainFieldResult[]) => {
     if (fields.length === 0) return;
