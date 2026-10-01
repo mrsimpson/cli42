@@ -293,3 +293,36 @@ describe("schema helpers", () => {
     expect(Object.keys(shapeOf(refined))).toEqual(["id", "title", "status", "uses", "part"]);
   });
 });
+
+describe("list attributes", () => {
+  test("list items reach the schema; an unreadable line is a parse error", () => {
+    const workspace = buildDemoWorkspace([
+      parseDocument(
+        "03-teams.demo42.md",
+        md(
+          "## Core",
+          "The core team.",
+          "```demo42",
+          ":::team",
+          "id: core",
+          "title: Core",
+          "owns:",
+          "  - a, the first",
+          "  - b",
+          "stray text",
+          ":::",
+          "```",
+        ),
+      ),
+    ]);
+    expect(workspace.elements[0]).toMatchObject({ id: "core", owns: ["a, the first", "b"] });
+    expect(workspace.parseErrors).toEqual([
+      {
+        message:
+          "Cannot read 'stray text' inside :::team — write it as 'key: value', or as '- item' below 'key:'",
+        file: "03-teams.demo42.md",
+        line: 10,
+      },
+    ]);
+  });
+});

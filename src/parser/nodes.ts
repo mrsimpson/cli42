@@ -21,7 +21,12 @@ export interface ProseNode {
 export interface MarkdownBlockNode {
   kind: "block";
   blockType: string; // raw string — builder rejects unknowns
+  /** `key: value` attributes; a list attribute (`key:` + `- item` lines) has the value "". */
   attributes: Record<string, string>;
+  /** The items of list attributes: `key:` followed by indented `- item` lines. Absent when none. */
+  lists?: Record<string, string[]>;
+  /** Lines inside the block that are neither attribute nor list item. Absent when none. */
+  unreadable?: Array<{ line: number; text: string }>;
   startLine: number;
   endLine: number;
 }

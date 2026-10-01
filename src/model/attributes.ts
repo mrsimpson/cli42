@@ -12,7 +12,7 @@ export type AttributeResult<T> = { ok: true; data: T } | { ok: false; issue: Bui
  */
 export function parseAttributes<S extends z.ZodType>(
   schema: S,
-  attributes: Readonly<Record<string, string | undefined>>,
+  attributes: Readonly<Record<string, string | readonly string[] | undefined>>,
   subject: string,
 ): AttributeResult<z.output<S>> {
   const result = schema.safeParse(attributes);
@@ -26,7 +26,8 @@ export function parseAttributes<S extends z.ZodType>(
   const allowed =
     deriveFields(schema as BlockSchema).find((meta) => meta.name === field)?.enumValues ??
     undefined;
-  const value = attributes[field];
+  const raw = attributes[field];
+  const value = Array.isArray(raw) ? raw.join(", ") : (raw as string | undefined);
   if (value === undefined || value.trim() === "") {
     return {
       ok: false,
