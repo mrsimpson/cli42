@@ -18,6 +18,7 @@ import {
   toHistoryPearls,
   toJsonLines,
   WorkspaceLinks,
+  linkElementIds,
 } from "@cli42/lib/web";
 import type { Route } from "@cli42/lib/web";
 
@@ -319,6 +320,22 @@ describe("WorkspaceLinks", () => {
     expect(links.documentHref("/ws/03-context.md")).toBe("#03-context.md");
     expect(linkIds("<p>bb-cli</p>", { ids: links, href: (id) => links.elementHref(id) })).toContain(
       'href="#05-blocks.md:el-bb-cli"',
+    );
+  });
+});
+
+describe("linkElementIds", () => {
+  test("links a workspace's ids, never the element's own", () => {
+    const links = new WorkspaceLinks(
+      ["/ws/05.md"],
+      [
+        { id: "bb-a", loc: { file: "/ws/05.md" } },
+        { id: "bb-b", loc: { file: "/ws/05.md" } },
+      ],
+    );
+    const html = linkElementIds("<p>bb-a calls bb-b</p>", links, "bb-a");
+    expect(html).toBe(
+      '<p>bb-a calls <a class="c42-id-link" href="#05.md:el-bb-b" data-id="bb-b">bb-b</a></p>',
     );
   });
 });

@@ -13,7 +13,7 @@ export {
 export type { ElementLinks, Route, RouteOptions } from "./routing.ts";
 export { groupNodes } from "./group.ts";
 export type { GroupOptions, RenderGroup } from "./group.ts";
-export { linkIds } from "./link-ids.ts";
+export { linkElementIds, linkIds } from "./link-ids.ts";
 export type { LinkIdsOptions } from "./link-ids.ts";
 export {
   HISTORY_CHUNK_SIZE,

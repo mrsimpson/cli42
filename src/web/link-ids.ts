@@ -35,6 +35,15 @@ function decodeEntities(text: string): string {
     .replace(/&amp;/g, "&");
 }
 
+/** Link the ids that rendered prose mentions to their elements (see linkIds). */
+export function linkElementIds(
+  html: string,
+  links: { has(id: string): boolean; elementHref(id: string): string | undefined },
+  own?: string | null,
+): string {
+  return linkIds(html, { ids: links, own, href: (id) => links.elementHref(id) });
+}
+
 /**
  * Wrap every mention of a known id in `html` in a link to its element. A
  * mention is a whole token: `bb-cli` in "bb-cli-v2" is none. Mentions are not
