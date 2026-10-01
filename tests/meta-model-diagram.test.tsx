@@ -158,9 +158,7 @@ const NODES: DiagramNode[] = [
   { id: "risk", label: "Risk", x: 300, y: 100, color: "var(--c-risk)", chapter: 4 },
 ];
 
-const EDGES: DiagramEdge[] = [
-  { from: "signal", to: "risk", label: "surfaces" },
-];
+const EDGES: DiagramEdge[] = [{ from: "signal", to: "risk", label: "surfaces" }];
 
 describe("MetaModelDiagram", () => {
   function render(props: Parameters<typeof MetaModelDiagram>[0]) {
@@ -170,7 +168,7 @@ describe("MetaModelDiagram", () => {
   test("renders an SVG element", () => {
     const html = render({ nodes: NODES, edges: EDGES, width: 400, height: 200 });
     expect(html).toContain("<svg");
-    expect(html).toContain("viewBox=\"0 0 400 200\"");
+    expect(html).toContain('viewBox="0 0 400 200"');
   });
 
   test("renders a node box and label for each node", () => {

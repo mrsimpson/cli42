@@ -20,6 +20,9 @@ const entry = Object.fromEntries(
 );
 
 export default defineConfig({
+  staged: {
+    "*": "vp check --fix",
+  },
   pack: {
     entry,
     dts: true,
