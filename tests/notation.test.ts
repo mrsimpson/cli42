@@ -118,3 +118,18 @@ describe("prose rendering", () => {
     expect(html).toContain("<em>A</em>");
   }, 30_000);
 });
+
+describe("Markdown prose is safe to show", () => {
+  test("raw HTML is shown as text and only safe links stay links", async () => {
+    const { renderMarkdown, renderMarkdownInline } = await import("@cli42/lib/markdown");
+    const html = renderMarkdown(
+      '<script>alert(1)</script>\n\nSee [x](javascript:alert(1)) [web](https://example.org "T") [rel](./a.md)',
+    );
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;");
+    expect(html).not.toContain('href="javascript');
+    expect(html).toContain('<a href="https://example.org" title="T">web</a>');
+    expect(html).toContain('<a href="./a.md">rel</a>');
+    expect(renderMarkdownInline("**a**")).toBe("<strong>a</strong>");
+  });
+});
