@@ -27,7 +27,8 @@ the changes and history views it does not have today.
 - **pdt42 is just another language definition.** No opt-ins for pdt42 in the lib. Where the lib
   lacks something pdt42 needs, the lib grows for every language:
   - `key:` followed by `- item` lines (list values whose items may contain commas);
-  - the line of each attribute, so a finding points at the attribute.
+  - the line of each attribute, so a finding points at the attribute (left out while coding: see
+    Code → Differences from the plan).
 
   Both are additive. arc42 and biz42 documents do not use `- item` inside blocks (the lib drops
   such lines today, `parser/core.ts:280`). Their ASTs must stay byte-identical, which is verified
@@ -236,24 +237,27 @@ Harmonizing this is an open question (below).
 - pdt42's canvases and its `canvases/` site page.
 - Linking titles in prose.
 
-### Open questions
+### Open questions (decided during Code, by the recommendations)
 
-- **Prose rendering in pdt42.**
-  - Recommendation: adopt the lib's backend rendering (`renderedHtml`) and move pdt42's safety
-    (escape raw HTML, keep safe URLs only) into `@cli42/lib/markdown` for every language.
-  - This changes arc42 and biz42 output for documents with raw HTML in prose. It needs a check
-    whether any of their tests or docs rely on raw HTML.
-- **The generic rules that pdt42 would newly get** (`EG03` wrong chapter, `WG03` several blocks
-  under one heading). Should they be part of pdt42's rule set? Recommendation: yes, for the sake of
-  harmonization, with the example fixed where they fire.
+- **Prose rendering in pdt42** — decided: the lib's backend rendering (`renderedHtml`), and
+  pdt42's safety (raw HTML as text, safe URLs only) moved into `@cli42/lib/markdown` for every
+  language. No doc or example of arc42/biz42 has raw HTML in prose: their rendered prose is
+  byte-identical, and no test changed.
+- **The generic rules that pdt42 newly gets** (`EG03`, `WG03` …) — decided: all of them. `EG03`
+  takes a block type's chapter from the file of the step that introduces it, and only checks the
+  methodology's files (any other file holds any block). The example now gives each motivation
+  and assumption its own heading and prose (WG02, WG03).
 
 ## Explore
 
 ### Tasks
 
-- [ ] Map pdt42's validator, canvas model and web onto `ElementOf` (every use of `element.data`).
+*None left.*
 
 ### Completed
+
+- [x] Map pdt42's validator, canvas model and web onto `ElementOf`: ~170 uses of `element.data`
+  (validator, canvas model, CLI, web), six block types with a `kind:` attribute (→ `category`).
 
 - [x] Playwright baselines on `main`: arc42-language 72 passed, biz42 62 passed. pdt42 has only a
   demo project (no functional Playwright tests). (In this container the pinned Playwright expects
@@ -365,12 +369,7 @@ green, and the consumers re-pinned to the new cli42 commit.
 
 ### Tasks
 
-- [ ] Phase 7: cli42 parser lists and attribute lines.
-- [ ] Phase 8: pdt42 adopts the cli42 way (separate commits).
-- [ ] Phase 9: pdt42 web on `/web`, `/web-react`; diff and history.
-- [ ] Phase 10: docs in all four repositories.
-- [ ] After each phase: compare CLI output (`validate`, `get`, `diff`, `rules`, `explain` on docs
-  and examples) with the pre-phase build. Differences must be intended and recorded here.
+*None left.*
 
 ### Completed
 
@@ -387,6 +386,25 @@ green, and the consumers re-pinned to the new cli42 commit.
 - [x] Phase 6: id prefixes in arc42 and biz42, `WG08` on; arc42 `E013` and biz42 `E011` on
   `idMatcher`; ids in prose link. Each example names one id in prose for a new Playwright test.
 
+- [x] Phase 7: cli42 parser `- item` lists (`lists` on the block node) and unreadable lines
+  (EG02); list schemas accept lists. ASTs and rendered prose of all arc42/biz42 docs and
+  examples byte-identical (compared on built payloads).
+- [x] Phase 8: pdt42 adopts the cli42 way: `chore` format fix; parser, model and validation on the
+  lib (one commit — they cannot compile apart); elements exactly `ElementOf` (`titleOf`,
+  `proseOf`); `explain` JSON from the lib's guidance; prose rendered on the server.
+- [x] Phase 9: pdt42 web on `/web` and `/web-react` (routes, theme, id links, changes view,
+  chapter diff, history, browse a version); `pdt42 diff`, `serve --diff`, `build --diff`,
+  `build --with-history`; new CLI and Playwright tests.
+- [x] Phase 10: docs — cli42 README; arc42 and biz42 chapter 5 and decisions `dec-shared-web-view`,
+  `dec-id-schemes`; pdt42 README and SKILL.md.
+- [x] CLI output compared per phase: `validate` of every doc and example clean in all three
+  repositories; built payloads (AST, prose) of arc42/biz42 identical across phases 7 and the
+  Markdown change. Intended differences: `rules` lists WG08; `explain` names the id scheme.
+
+Final state: cli42 248 tests; arc42-language unit 526, Playwright 73 (72 unchanged + 1);
+biz42 unit 110 (107 unchanged + 3), Playwright 65 (62 unchanged + 3); pdt42 unit 68 (63 + 5, tests
+changed only in the "adopt the cli42 way" commits), Playwright 3 (new) + demo.
+
 Differences from the plan, decided while coding:
 - Components take `ElementLinks` (`WorkspaceLinks`) instead of an id → file map.
 - The language takes part through a React context (`WebViewProvider`) instead of props passed
@@ -394,17 +412,31 @@ Differences from the plan, decided while coding:
   prose run the language's renderer shows.
 - The frontend is harmonized (see Key Decisions): headings, the changes view and the history look
   the same in every app.
+- **Attribute lines were left out** of the lib. Recording them changes every language's AST and
+  the lines of WG01/EG02 findings — and with them existing tests of the lib, arc42 and biz42.
+  pdt42's findings now point at the block, like everyone's. Attribute lines for all languages
+  can follow as a separate change that updates those tests.
+- `deriveFields` finds enum values through pipes and defaults (pdt42's fields parse, then check),
+  so EG02 says "use one of: …" for pdt42 too.
+- No `pdt42 history` command: as in arc42 and biz42, the history is browsed in the web view
+  (`serve`, `build --with-history`).
+- pdt42 findings carry `file`/`line` like the lib's diagnostics (no `loc`); the payload has
+  `filePath`, flat elements, `edges`, `diagrams`, ignore directives — what the diff and the shared
+  views read.
+- In this container the Playwright version arc42/biz42 pin expects chromium build 1243; the
+  installed 1194 headless shell was linked under that name to run their suites.
 
 ## Commit
 
 ### Tasks
 
-- [ ] Per phase: one commit in cli42 and one commit per consumer (Conventional Commits; body with
-  Intent / Key decisions / Side effects).
-- [ ] pdt42's behaviour changes in separate commits marked "adopt the cli42 way".
-- [ ] Merge cli42 first; after its release, switch the consumers' catalog entry to the npm version.
+- [ ] Merge cli42 first; after its release, switch the consumers' catalog entry to the npm version
+  (they pin `github:mrsimpson/cli42#714bf87` now).
 - [ ] Pull requests only when asked.
 
 ### Completed
 
 - [x] Commit this plan.
+- [x] Commits per phase in cli42 and per consumer (Conventional Commits; Intent / Key decisions /
+  Side effects), pushed to `claude/web-view-modules` in all four repositories.
+- [x] pdt42's behaviour changes in commits marked "adopt the cli42 way".
