@@ -251,18 +251,19 @@ Harmonizing this is an open question (below).
 
 ### Tasks
 
-- [ ] Run the Playwright suites of arc42-language, biz42 and pdt42 on `main` (baseline).
-- [ ] Record which arc42/biz42 tests assert the rule list (`rules --format json`), so `WG08` does
-  not break them. If they do, `WG08` is only listed where a language declares prefixes.
-- [ ] Check that no example or doc of arc42/biz42 gets a new finding from `WG08` or from `E011`
-  using all of biz42's prefixes.
-- [ ] Check which Playwright tests count links in prose (the linker adds `<a>`).
-- [ ] Check `vp pack` with a `.css` asset and a React peer (tsdown); decide how the stylesheet is
-  copied to `dist/`.
 - [ ] Map pdt42's validator, canvas model and web onto `ElementOf` (every use of `element.data`).
 
 ### Completed
 
+- [x] Playwright baselines on `main`: arc42-language 72 passed, biz42 62 passed. pdt42 has only a
+  demo project (no functional Playwright tests). (In this container the pinned Playwright expects
+  chromium build 1243; the installed 1194 shell was linked under that name.)
+- [x] No arc42/biz42 test asserts the full rule list; `WG08` is added only when a language passes
+  its schemas to `genericRules`, so a language without prefixes keeps its list.
+- [x] No example or doc of arc42/biz42 gets a finding from `WG08` or from `E011` on all prefixes.
+- [x] No Playwright test counts links in prose.
+- [x] `vp pack` copies `styles.css` (`pack.copy`) and keeps React external; subpaths of files are
+  not built as entries.
 - [x] Compare the routing of the three web views.
 - [x] Compare the web code of arc42 and biz42 file by file.
 - [x] Tally id prefixes per kind in all three repositories.
@@ -364,12 +365,6 @@ green, and the consumers re-pinned to the new cli42 commit.
 
 ### Tasks
 
-- [ ] Phase 1: cli42 id scheme and `WG08`.
-- [ ] Phase 2: cli42 `/web`.
-- [ ] Phase 3: cli42 `/web-react`.
-- [ ] Phase 4: arc42-language adopts `/web`, `/web-react`.
-- [ ] Phase 5: biz42 adopts `/web`, `/web-react`, harmonized routing.
-- [ ] Phase 6: id prefixes in arc42 and biz42; `E011`/`E013` on `idMatcher`; prose linking on.
 - [ ] Phase 7: cli42 parser lists and attribute lines.
 - [ ] Phase 8: pdt42 adopts the cli42 way (separate commits).
 - [ ] Phase 9: pdt42 web on `/web`, `/web-react`; diff and history.
@@ -379,7 +374,26 @@ green, and the consumers re-pinned to the new cli42 commit.
 
 ### Completed
 
-*None yet.*
+- [x] Phase 1: cli42 id scheme and `WG08` (`idSchemeOf`, `idMatcher`; `explain` names the scheme).
+- [x] Phase 2: cli42 `/web` (routes, `DocumentRoutes`, `WorkspaceLinks`, `slug`, `groupNodes`,
+  `linkIds`/`linkElementIds`, history format and history/snapshot reading, version helpers).
+- [x] Phase 3: cli42 `/web-react` (`WebViewProvider` with labels, `renderNodes`, `isBlock`;
+  theme, version, history, snapshot hooks; history chain and entry; changes view with
+  extensions; chapter diff; Mermaid; `styles.css` with `c42-<component>-<name>` classes).
+- [x] Phase 4: arc42-language on `/web` and `/web-react`. Unit 526 and Playwright 72 unchanged.
+- [x] Phase 5: biz42 on `/web` and `/web-react`, `#chapter-…` gone, heading anchors work. No
+  existing test needed a change (unit 107, Playwright 62); new Playwright tests for the shared
+  element route of diagram links and for heading anchors.
+- [x] Phase 6: id prefixes in arc42 and biz42, `WG08` on; arc42 `E013` and biz42 `E011` on
+  `idMatcher`; ids in prose link. Each example names one id in prose for a new Playwright test.
+
+Differences from the plan, decided while coding:
+- Components take `ElementLinks` (`WorkspaceLinks`) instead of an id → file map.
+- The language takes part through a React context (`WebViewProvider`) instead of props passed
+  through every shared component; it also supplies `isBlock`, so changed words are marked per
+  prose run the language's renderer shows.
+- The frontend is harmonized (see Key Decisions): headings, the changes view and the history look
+  the same in every app.
 
 ## Commit
 
