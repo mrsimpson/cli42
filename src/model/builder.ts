@@ -17,7 +17,14 @@ import type {
 export type BuildNode =
   | { kind: "heading"; text: string }
   | { kind: "prose"; text: string }
-  | { kind: "block"; blockType: string; attributes: Record<string, string>; startLine: number }
+  | {
+      kind: "block";
+      blockType: string;
+      attributes: Record<string, string>;
+      lists?: Record<string, string[]>;
+      unreadable?: ReadonlyArray<{ line: number; text: string }>;
+      startLine: number;
+    }
   | { kind: "ignore"; ruleCode: string; reason?: string; startLine: number }
   | { kind: "diagram"; startLine: number }
   | { kind: "bare-mermaid"; startLine: number };
@@ -146,9 +153,20 @@ export function buildWorkspace<
       const schema = options.elements[blockType]!;
       // Normalise empty strings to undefined so Zod's optional() treats them
       // as absent (the DSL parser emits "" for `key:` with no value).
-      const normalised: Record<string, string | undefined> = {};
+      // A list attribute (`key:` + `- item` lines) is its items.
+      const normalised: Record<string, string | string[] | undefined> = {};
       for (const [key, value] of Object.entries(attributes)) {
-        normalised[key] = keepEmpty.has(key) || value.trim() !== "" ? value : undefined;
+        const items = node.lists?.[key];
+        normalised[key] = items ?? (keepEmpty.has(key) || value.trim() !== "" ? value : undefined);
+      }
+
+      // Lines inside the block that are neither attribute nor list item are lost content.
+      for (const { line, text } of node.unreadable ?? []) {
+        parseErrors.push({
+          message: message({ kind: "unreadable-line", subject: blockType, text }),
+          file,
+          line,
+        });
       }
 
       const result = parseAttributes(schema, normalised, blockType);

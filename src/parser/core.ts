@@ -62,6 +62,9 @@ export function parseLines<D, F extends string>(
   let openBlock: {
     blockType: string;
     attributes: Record<string, string>;
+    lists: Record<string, string[]>;
+    unreadable: Array<{ line: number; text: string }>;
+    lastKey: string | null;
     startLine: number;
   } | null = null;
 
@@ -259,12 +262,15 @@ export function parseLines<D, F extends string>(
             endLine: lineNo,
           });
         } else {
+          const { lists, unreadable } = openBlock;
           nodes.push(
             block(
               {
                 kind: "block",
                 blockType: openBlock.blockType,
                 attributes: openBlock.attributes,
+                ...(Object.keys(lists).length > 0 ? { lists } : {}),
+                ...(unreadable.length > 0 ? { unreadable } : {}),
                 startLine: openBlock.startLine,
                 endLine: lineNo,
               },
@@ -280,8 +286,17 @@ export function parseLines<D, F extends string>(
       const attrMatch = /^([a-z][a-z0-9-]*):\s*(.*)$/.exec(line);
       if (attrMatch) {
         openBlock.attributes[attrMatch[1]!] = attrMatch[2]!;
+        openBlock.lastKey = attrMatch[1]!;
+        continue;
       }
-      // Other lines inside block are ignored (future prose extension)
+      // List item of the attribute above it (`key:` with no value): `  - item`
+      const itemMatch = /^\s+-\s+(.*?)\s*$/.exec(line);
+      const listKey = openBlock.lastKey;
+      if (itemMatch && listKey !== null && openBlock.attributes[listKey]!.trim() === "") {
+        (openBlock.lists[listKey] ??= []).push(itemMatch[1]!);
+        continue;
+      }
+      if (line.trim() !== "") openBlock.unreadable.push({ line: lineNo, text: line.trim() });
       continue;
     }
 
@@ -354,6 +369,9 @@ export function parseLines<D, F extends string>(
       openBlock = {
         blockType: openMatch[1]!,
         attributes: {},
+        lists: {},
+        unreadable: [],
+        lastKey: null,
         startLine: lineNo,
       };
       continue;

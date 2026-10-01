@@ -24,7 +24,8 @@ export type BuildIssue =
     }
   | { kind: "invalid-block"; subject: string; detail: string }
   | { kind: "unknown-attribute"; subject: string; attribute: string; known: string[] }
-  | { kind: "unknown-block"; blockType: string; known: string[] };
+  | { kind: "unknown-block"; blockType: string; known: string[] }
+  | { kind: "unreadable-line"; subject: string; text: string };
 
 /** Rewords a build issue; receives the default message. */
 export type MessageMapper = (issue: BuildIssue, message: string) => string;
@@ -69,6 +70,8 @@ export function defaultMessage(issue: BuildIssue): string {
         : `Invalid value for '${issue.field}' on ${issue.subject} — ${issue.detail ?? "correct the value"}`;
     case "invalid-block":
       return `Invalid ${issue.subject} — ${issue.detail}`;
+    case "unreadable-line":
+      return `Cannot read '${issue.text}' inside :::${issue.subject} — write it as 'key: value', or as '- item' below 'key:'`;
     case "unknown-attribute": {
       const suggestion = closest(issue.attribute, issue.known);
       return suggestion

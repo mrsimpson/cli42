@@ -327,3 +327,56 @@ describe("parseLines", () => {
     );
   });
 });
+
+describe("list attributes and unreadable lines", () => {
+  const lines = [
+    "# Teams",
+    "## Core",
+    "The core team.",
+    "```demo42",
+    ":::team",
+    "id: core",
+    "title: Core",
+    "owns:",
+    "  - a, the first",
+    "  - b",
+    "this is no attribute",
+    ":::",
+    "```",
+  ];
+
+  test("`key:` with `- item` lines is a list; other lines are recorded as unreadable", () => {
+    for (const nodes of [
+      parseMarkdown("03-teams.demo42.md", md(...lines), DEMO_DIALECT).nodes,
+      parseAsciidoc(
+        "03-teams.demo42.adoc",
+        md(
+          "= Teams",
+          "== Core",
+          "The core team.",
+          "[source,demo42]",
+          "----",
+          ...lines.slice(4, 12),
+          "----",
+        ),
+        DEMO_DIALECT,
+      ).nodes,
+    ]) {
+      expect(nodes.find((node) => node.kind === "block")).toMatchObject({
+        attributes: { id: "core", title: "Core", owns: "" },
+        lists: { owns: ["a, the first", "b"] },
+        unreadable: [{ text: "this is no attribute" }],
+      });
+    }
+  });
+
+  test("a block without lists or unreadable lines has neither field", () => {
+    const node = parseMarkdown(
+      "a.demo42.md",
+      md(...block("service", { id: "a", title: "A", status: "live" })),
+      DEMO_DIALECT,
+    ).nodes.find((n) => n.kind === "block");
+    expect(node).not.toHaveProperty("lists");
+    expect(node).not.toHaveProperty("unreadable");
+  });
+});
