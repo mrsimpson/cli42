@@ -59,17 +59,18 @@ export const NODE_W = 128;
 export const NODE_H = 28;
 export const NODE_RX = 5;
 
-function lx(cx: number) { return cx - NODE_W / 2; }
-function ty(cy: number) { return cy - NODE_H / 2; }
+function lx(cx: number) {
+  return cx - NODE_W / 2;
+}
+function ty(cy: number) {
+  return cy - NODE_H / 2;
+}
 
 /**
  * Auto-select attachment faces from relative node positions.
  * Prefers horizontal connections; falls back to vertical for same-column nodes.
  */
-export function autoFaces(
-  [ax, ay]: [number, number],
-  [bx, by]: [number, number],
-): [Face, Face] {
+export function autoFaces([ax, ay]: [number, number], [bx, by]: [number, number]): [Face, Face] {
   const dx = bx - ax;
   const dy = by - ay;
   if (Math.abs(dx) >= Math.abs(dy)) {
@@ -80,10 +81,14 @@ export function autoFaces(
 
 function attachPoint([cx, cy]: [number, number], face: Face): [number, number] {
   switch (face) {
-    case "right":  return [lx(cx) + NODE_W, cy];
-    case "left":   return [lx(cx), cy];
-    case "top":    return [cx, ty(cy)];
-    case "bottom": return [cx, ty(cy) + NODE_H];
+    case "right":
+      return [lx(cx) + NODE_W, cy];
+    case "left":
+      return [lx(cx), cy];
+    case "top":
+      return [cx, ty(cy)];
+    case "bottom":
+      return [cx, ty(cy) + NODE_H];
   }
 }
 
@@ -92,11 +97,16 @@ function attachPoint([cx, cy]: [number, number], face: Face): [number, number] {
  * Computed once; consumed by both buildPath() and labelMidpoint().
  */
 export interface EdgeGeometry {
-  x1: number; y1: number;
-  x2: number; y2: number;
-  qx?: number; qy?: number;   // quadratic control point
-  cx1?: number; cy1?: number; // cubic control points
-  cx2?: number; cy2?: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  qx?: number;
+  qy?: number; // quadratic control point
+  cx1?: number;
+  cy1?: number; // cubic control points
+  cx2?: number;
+  cy2?: number;
 }
 
 export function resolveGeometry(
@@ -111,15 +121,9 @@ export function resolveGeometry(
   const [x2, y2] = attachPoint(to, toFace);
   if (!cp) return { x1, y1, x2, y2 };
   if (cubic) {
-    return { x1, y1, x2, y2,
-      cx1: x1 + cp[0], cy1: y1 + cp[1],
-      cx2: x2 - cp[0], cy2: y2 - cp[1],
-    };
+    return { x1, y1, x2, y2, cx1: x1 + cp[0], cy1: y1 + cp[1], cx2: x2 - cp[0], cy2: y2 - cp[1] };
   }
-  return { x1, y1, x2, y2,
-    qx: (x1 + x2) / 2 + cp[0],
-    qy: (y1 + y2) / 2 + cp[1],
-  };
+  return { x1, y1, x2, y2, qx: (x1 + x2) / 2 + cp[0], qy: (y1 + y2) / 2 + cp[1] };
 }
 
 export function buildPath(g: EdgeGeometry): string {
@@ -142,10 +146,7 @@ export function labelMidpoint(g: EdgeGeometry): [number, number] {
   }
   if (g.qx !== undefined) {
     // t=0.5 on quadratic bezier: (1/4)P0 + (1/2)P1 + (1/4)P2
-    return [
-      0.25 * g.x1 + 0.5 * g.qx + 0.25 * g.x2,
-      0.25 * g.y1 + 0.5 * g.qy! + 0.25 * g.y2,
-    ];
+    return [0.25 * g.x1 + 0.5 * g.qx + 0.25 * g.x2, 0.25 * g.y1 + 0.5 * g.qy! + 0.25 * g.y2];
   }
   return [(g.x1 + g.x2) / 2, (g.y1 + g.y2) / 2];
 }
@@ -159,10 +160,7 @@ interface RenderedEdge {
   labelY: number;
 }
 
-function renderEdge(
-  edge: DiagramEdge,
-  nodeMap: Map<string, DiagramNode>,
-): RenderedEdge | null {
+function renderEdge(edge: DiagramEdge, nodeMap: Map<string, DiagramNode>): RenderedEdge | null {
   const fromNode = nodeMap.get(edge.from);
   const toNode = nodeMap.get(edge.to);
   if (!fromNode || !toNode) return null;
