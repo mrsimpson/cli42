@@ -1,13 +1,16 @@
 {
   "name": "@cli42/lib",
   "version": "0.1.0",
-  "description": "The shared language engine of the *42 documentation CLIs (arc42, biz42): Markdown and AsciiDoc parser, schema-driven model, validation engine with generic rules, Mermaid syntax check, authoring guidance, semantic diff, Git snapshots and history.",
+  "description": "The shared language engine of the *42 documentation CLIs (arc42, biz42, pdt42): Markdown and AsciiDoc parser, schema-driven model with id schemes, validation engine with generic rules, Mermaid syntax check, authoring guidance, semantic diff, Git snapshots and history, and the shared web views (routes, id links, React components).",
   "keywords": [
     "arc42",
     "biz42",
     "cli",
     "diff",
-    "git"
+    "git",
+    "pdt42",
+    "react",
+    "web"
   ],
   "homepage": "https://github.com/mrsimpson/cli42",
   "license": "MIT",
