@@ -8,6 +8,7 @@ import {
   ignoreGuidance,
 } from "@cli42/lib/explain";
 import { ServiceSchema, TeamSchema } from "./support/demo42.ts";
+import { z } from "@cli42/lib/schema";
 
 describe("blockGuidance", () => {
   test("derives description, fields, cross-references and tips from the schema", () => {
@@ -125,5 +126,19 @@ describe("ignoreGuidance", () => {
     expect(text.startsWith("Directive: ignore directive\n")).toBe(true);
     expect(text).toContain("\nSyntax:\n");
     expect(text).toContain("\nConstraints:\n");
+  });
+});
+
+describe("id scheme in guidance", () => {
+  test("a kind with idPrefixes tells how its ids start", () => {
+    const schema = z
+      .object({ id: z.string() })
+      .meta({ description: "A capability.", idPrefixes: ["cap", "capability"] });
+    const guidance = blockGuidance(schema, "capability");
+    expect(guidance.idScheme).toEqual({ prefixes: ["cap", "capability"], bareId: false });
+    expect(formatBlockGuidance("capability", guidance)).toContain(
+      "  Id: starts with 'cap-' (or 'capability-')",
+    );
+    expect(blockGuidance(z.object({ id: z.string() }), "x").idScheme).toBeUndefined();
   });
 });
