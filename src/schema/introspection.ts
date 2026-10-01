@@ -48,6 +48,26 @@ export function metaOf<M extends object = Record<string, unknown>>(
   return z.globalRegistry.get(schema) as Partial<M> | undefined;
 }
 
+/** The values of the enum a field validates against, looking through optional, default and pipes. */
+function enumValuesOf(def: Def, depth = 0): string[] | null {
+  if (depth > 8) return null;
+  switch (def["type"]) {
+    case "enum":
+      return Object.keys(def["entries"] as Record<string, string>);
+    case "optional":
+    case "default":
+    case "nullable":
+      return enumValuesOf(defOf(def["innerType"]), depth + 1);
+    case "pipe":
+      // A pipe validates its output against the enum (e.g. a value parsed, then checked).
+      return (
+        enumValuesOf(defOf(def["out"]), depth + 1) ?? enumValuesOf(defOf(def["in"]), depth + 1)
+      );
+    default:
+      return null;
+  }
+}
+
 /**
  * Walk a ZodObject's shape and extract field metadata structurally.
  * - required: field def type is not "optional" and not a pipe whose input is "optional"
@@ -67,22 +87,16 @@ export function deriveFields(schema: BlockSchema): FieldMeta[] {
 
     const def = defOf(field);
     let required = true;
-    let enumValues: string[] | null = null;
+    const enumValues = enumValuesOf(def);
 
-    if (def["type"] === "optional") {
+    if (def["type"] === "optional" || def["type"] === "default") {
       required = false;
-      const innerDef = defOf(def["innerType"]);
-      if (innerDef["type"] === "enum") {
-        enumValues = Object.keys(innerDef["entries"] as Record<string, string>);
-      }
     } else if (def["type"] === "pipe") {
       // splitListSchema:         pipe(optional(string), transform) → optional
       // splitListRequiredSchema: pipe(string.min(1), transform)    → required
       if (defOf(def["in"])["type"] === "optional") {
         required = false;
       }
-    } else if (def["type"] === "enum") {
-      enumValues = Object.keys(def["entries"] as Record<string, string>);
     }
 
     fields.push({ name, description, required, enumValues });
