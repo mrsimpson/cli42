@@ -185,6 +185,8 @@ export class DocumentRoutes {
 
 /** Links to the elements of a workspace. */
 export interface ElementLinks {
+  /** Whether an element with this id exists (the ids `linkIds` links). */
+  has(id: string): boolean;
   /** The link to an element, opened in its document; undefined for an unknown id. */
   elementHref(id: string): string | undefined;
 }
@@ -207,7 +209,6 @@ export class WorkspaceLinks implements ElementLinks {
     }
   }
 
-  /** Whether an element with this id exists. */
   has(id: string): boolean {
     return this.files.has(id);
   }
