@@ -25,3 +25,11 @@ export {
 } from "./DiffSegment.tsx";
 export { MermaidDiagram } from "./MermaidDiagram.tsx";
 export type { MermaidDiagramProps } from "./MermaidDiagram.tsx";
+export { MetaModelDiagram, autoFaces, resolveGeometry, buildPath, labelMidpoint } from "./MetaModelDiagram.tsx";
+export type {
+  Face,
+  DiagramNode,
+  DiagramEdge,
+  EdgeGeometry,
+  MetaModelDiagramProps,
+} from "./MetaModelDiagram.tsx";
