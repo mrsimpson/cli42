@@ -31,6 +31,7 @@ describe("scrollToBlock", () => {
   /** The block's top relative to the view; the page reflows by changing `layoutShift`. */
   let top: number;
   let present: boolean;
+  let margin: string;
   const scrollIntoView = vi.fn();
 
   function runFrame(advance = 16) {
@@ -45,11 +46,13 @@ describe("scrollToBlock", () => {
     now = 0;
     top = 900;
     present = true;
+    margin = "0px";
     listeners = new Map();
     scrollIntoView.mockReset();
     scrollIntoView.mockImplementation(() => {
-      top = 0;
+      top = parseFloat(margin);
     });
+    vi.stubGlobal("getComputedStyle", () => ({ scrollMarginTop: margin }));
     vi.stubGlobal("performance", { now: () => now });
     vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) =>
       frames.push(callback),
@@ -92,6 +95,16 @@ describe("scrollToBlock", () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(2);
     expect(top).toBe(0);
     for (let i = 0; i < 10; i++) runFrame();
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  test("a block with a scroll margin is in place below the top, and is not scrolled again", () => {
+    margin = "16px";
+    const onDone = vi.fn();
+    scrollToBlock("bb-x", { onDone, settleMs: 100 });
+    for (let i = 0; i < 12; i++) runFrame();
+    expect(top).toBe(16);
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 
