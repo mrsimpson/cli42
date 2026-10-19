@@ -49,8 +49,10 @@ export function scrollToBlock(elementId: string, options: ScrollToBlockOptions =
     const now = performance.now();
     const block = document.getElementById(blockAnchor(elementId));
     if (block) {
+      // Where scrollIntoView puts the block: below the top by its scroll-margin.
+      const margin = parseFloat(getComputedStyle(block).scrollMarginTop) || 0;
       const before = block.getBoundingClientRect().top;
-      if (Math.abs(before) > 1) {
+      if (Math.abs(before - margin) > 1) {
         block.scrollIntoView({ block: "start", behavior: "instant" });
         // At the end of the page the block cannot reach the top: where it
         // stays is where it is in place.
