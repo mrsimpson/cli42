@@ -26,14 +26,6 @@ export interface RenderNodesProps {
    */
   content?: NodesContent;
   viewMode: ViewMode;
-  /**
-   * @deprecated No longer set: an element is brought into view by the views
-   * (see `useScrollToBlock`), its block is not opened. Within a chapter,
-   * `useBlockExpansion` holds what the reader opened.
-   */
-  targetElementId?: string | null;
-  /** @deprecated See `targetElementId`. */
-  onTargetConsumed?: () => void;
 }
 
 /** Words of the language, where the shared views name its model. */
