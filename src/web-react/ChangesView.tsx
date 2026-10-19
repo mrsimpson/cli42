@@ -4,6 +4,7 @@ import type { DiffSegment } from "../diff/index.ts";
 import { cx, scope } from "./classes.ts";
 import { useWebView } from "./context.tsx";
 import type { ViewMode } from "./context.tsx";
+import { useScrollToBlock } from "./blockNavigation.tsx";
 import { ChapterDiff, headingClass } from "./ChapterDiff.tsx";
 import { ChangeCounts, STATUS_CLASS, snapshotLabel } from "./DiffSegment.tsx";
 
@@ -62,6 +63,7 @@ interface ChangesViewProps<P extends ChangePayload> {
    * documents, unchanged sections are skeletons).
    */
   withChapters?: boolean;
+  /** An element whose block to bring into view (never open), and the call that says it was. */
   targetElementId?: string | null;
   onTargetConsumed?: () => void;
   extensions?: ChangeExtensions<P>;
@@ -106,6 +108,8 @@ export function ChangesView<P extends ChangePayload>({
   extensions,
 }: ChangesViewProps<P>) {
   const { labels } = useWebView();
+  // Once for all chapters: the block is in whichever of them shows it.
+  useScrollToBlock(targetElementId, "changes", onTargetConsumed);
   return (
     <article className={styles.changes} data-testid="changes-view">
       <h1 className={cx(headingClass(1), doc.chapterTitle)}>{title}</h1>
@@ -154,13 +158,7 @@ export function ChangesView<P extends ChangePayload>({
           <ChangeIndex diff={diff} elementLink={elementLink} documentLink={documentLink} />
           {withChapters &&
             diff.view.documents.map((document) => (
-              <ChapterDiff
-                key={document.file}
-                diff={document}
-                viewMode={viewMode}
-                targetElementId={targetElementId}
-                onTargetConsumed={onTargetConsumed}
-              />
+              <ChapterDiff key={document.file} diff={document} viewMode={viewMode} />
             ))}
         </>
       )}

@@ -64,15 +64,11 @@ function SectionRender({
   content,
   compareTo,
   viewMode,
-  targetElementId,
-  onTargetConsumed,
 }: {
   content: SectionContent;
   /** The other version: prose words that differ from it are marked. */
   compareTo?: SectionContent;
   viewMode: ViewMode;
-  targetElementId?: string | null;
-  onTargetConsumed?: () => void;
 }) {
   const view = useWebView();
   const proseHtml = useMemo(
@@ -93,8 +89,6 @@ function SectionRender({
         ...(proseHtml ? { proseHtml } : {}),
         content,
         viewMode,
-        targetElementId,
-        onTargetConsumed,
       })}
     </>
   );
@@ -345,17 +339,7 @@ function VersionSwitch({
 }
 
 /** One changed section, marked by status, with both versions available. */
-export function SegmentView({
-  segment,
-  viewMode,
-  targetElementId,
-  onTargetConsumed,
-}: {
-  segment: DiffSegment;
-  viewMode: ViewMode;
-  targetElementId?: string | null;
-  onTargetConsumed?: () => void;
-}) {
+export function SegmentView({ segment, viewMode }: { segment: DiffSegment; viewMode: ViewMode }) {
   const [version, setVersion] = useState<SectionVersion>("changes");
   const path = segment.section.headingPath;
   const title = path[path.length - 1] ?? "Preamble";
@@ -367,8 +351,6 @@ export function SegmentView({
           content={segment.head}
           {...(compareTo ? { compareTo } : {})}
           viewMode={viewMode}
-          targetElementId={targetElementId}
-          onTargetConsumed={onTargetConsumed}
         />
       </div>
     );
