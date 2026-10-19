@@ -5,6 +5,7 @@ import { slug } from "../web/slug.ts";
 import { cx, scope } from "./classes.ts";
 import { useWebView } from "./context.tsx";
 import type { ViewMode } from "./context.tsx";
+import { ChapterExpansion, useScrollToBlock } from "./blockNavigation.tsx";
 import { ChangeCounts, SegmentView, sectionKeyOf } from "./DiffSegment.tsx";
 
 const styles = scope("changes");
@@ -53,6 +54,7 @@ interface ChapterDiffProps {
    */
   document?: { nodes: readonly unknown[] };
   viewMode: ViewMode;
+  /** An element whose block to bring into view (never open), and the call that says it was. */
   targetElementId?: string | null;
   onTargetConsumed?: () => void;
 }
@@ -70,49 +72,44 @@ export function ChapterDiff({
   onTargetConsumed,
 }: ChapterDiffProps) {
   const view = useWebView();
+  useScrollToBlock(targetElementId, diff.file, onTargetConsumed);
   const segments = useMemo(
     () => new Map(diff.segments.map((segment) => [sectionKeyOf(segment.section), segment])),
     [diff],
   );
   return (
-    <article
-      className={cx(doc.document, styles.chapter)}
-      data-testid="chapter-diff"
-      data-file={diff.file}
-      id={`chapter-${diff.file}`}
-    >
-      <header className={styles.chapterHeader}>
-        <h1 className={cx(headingClass(1), doc.chapterTitle)}>{diff.title}</h1>
-        <ChangeCounts {...diff} />
-      </header>
-      {diff.outline.map((entry) => {
-        const key = sectionKeyOf(entry.section);
-        const segment = segments.get(key);
-        if (segment) {
-          return (
-            <SegmentView
-              key={key}
-              segment={segment}
-              viewMode={viewMode}
-              targetElementId={targetElementId}
-              onTargetConsumed={onTargetConsumed}
-            />
-          );
-        }
-        if (document && entry.head) {
-          const { startLine, endLine } = entry.head;
-          const nodes = (document.nodes as Node[]).filter((node) => {
-            const line = lineOf(node);
-            return line >= startLine && line <= endLine;
-          });
-          return (
-            <section key={key} data-testid="unchanged-section">
-              {view.renderNodes({ nodes, viewMode, targetElementId, onTargetConsumed })}
-            </section>
-          );
-        }
-        return <SkeletonSection key={key} entry={entry} />;
-      })}
-    </article>
+    <ChapterExpansion chapterKey={diff.file}>
+      <article
+        className={cx(doc.document, styles.chapter)}
+        data-testid="chapter-diff"
+        data-file={diff.file}
+        id={`chapter-${diff.file}`}
+      >
+        <header className={styles.chapterHeader}>
+          <h1 className={cx(headingClass(1), doc.chapterTitle)}>{diff.title}</h1>
+          <ChangeCounts {...diff} />
+        </header>
+        {diff.outline.map((entry) => {
+          const key = sectionKeyOf(entry.section);
+          const segment = segments.get(key);
+          if (segment) {
+            return <SegmentView key={key} segment={segment} viewMode={viewMode} />;
+          }
+          if (document && entry.head) {
+            const { startLine, endLine } = entry.head;
+            const nodes = (document.nodes as Node[]).filter((node) => {
+              const line = lineOf(node);
+              return line >= startLine && line <= endLine;
+            });
+            return (
+              <section key={key} data-testid="unchanged-section">
+                {view.renderNodes({ nodes, viewMode })}
+              </section>
+            );
+          }
+          return <SkeletonSection key={key} entry={entry} />;
+        })}
+      </article>
+    </ChapterExpansion>
   );
 }

@@ -5,6 +5,17 @@
 // Styles: import "@cli42/lib/web-react/styles.css" once.
 export { WebViewProvider, useWebView } from "./context.tsx";
 export type { Labels, NodesContent, RenderNodesProps, ViewMode, WebView } from "./context.tsx";
+export {
+  ChapterExpansion,
+  blockAnchor,
+  openIn,
+  scrollToBlock,
+  useBlockExpansion,
+  useChapterExpansion,
+  useScrollToBlock,
+  withOpen,
+} from "./blockNavigation.tsx";
+export type { ScrollToBlockOptions } from "./blockNavigation.tsx";
 export { cx, scope } from "./classes.ts";
 export { useTheme } from "./useTheme.ts";
 export type { Theme } from "./useTheme.ts";

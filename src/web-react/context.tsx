@@ -26,8 +26,13 @@ export interface RenderNodesProps {
    */
   content?: NodesContent;
   viewMode: ViewMode;
-  /** An element to open and scroll to, and the call that says it was. */
+  /**
+   * @deprecated No longer set: an element is brought into view by the views
+   * (see `useScrollToBlock`), its block is not opened. Within a chapter,
+   * `useBlockExpansion` holds what the reader opened.
+   */
   targetElementId?: string | null;
+  /** @deprecated See `targetElementId`. */
   onTargetConsumed?: () => void;
 }
 
