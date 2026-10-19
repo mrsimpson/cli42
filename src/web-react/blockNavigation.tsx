@@ -117,12 +117,14 @@ export function withOpen(
 /**
  * Which blocks of a chapter the reader opened (prose swapped for the model
  * box). It starts empty with every chapter: each navigation leads to the
- * prose first. The state is derived from the chapter key while rendering, so
- * a chapter never shows for one render what the one before had open.
+ * prose first. The state follows the chapter key while rendering, so a
+ * chapter never shows, not even for one render, what the one before had open.
  */
 export function useChapterExpansion(chapterKey: string): BlockExpansion {
   const [expansion, setExpansion] = useState<Expansion>({ chapterKey, open: NONE });
   const open = openIn(expansion, chapterKey);
+  // Forget the chapter left, so that coming back does not revive what was open.
+  if (expansion.chapterKey !== chapterKey) setExpansion({ chapterKey, open: NONE });
   const setOpen = useCallback(
     (elementId: string, shown: boolean) =>
       setExpansion((current) => withOpen(current, chapterKey, elementId, shown)),
