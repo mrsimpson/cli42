@@ -11,12 +11,18 @@ export interface SourceLocation {
 }
 
 /**
+ * Values of a block's `x-*` attributes keyed by name without the prefix
+ * (`x-phase: explore` is `{ phase: "explore" }`); a list attribute is its items.
+ */
+export type Extensions = Record<string, string | string[]>;
+
+/**
  * The elements a schema map describes: for each block kind, the schema's
  * output plus the kind and the source location — the element union of a
  * language, derived from its schemas instead of being declared twice.
  */
 export type ElementOf<S extends Readonly<Record<string, z.ZodType>>, L = SourceLocation> = {
-  [K in keyof S & string]: z.output<S[K]> & { kind: K; loc: L };
+  [K in keyof S & string]: z.output<S[K]> & { kind: K; loc: L; extensions?: Extensions };
 }[keyof S & string];
 
 export interface ParseError {

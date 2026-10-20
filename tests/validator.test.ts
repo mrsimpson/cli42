@@ -107,6 +107,20 @@ describe("generic rules", () => {
     ).toContain("WG01@4");
   });
 
+  test("x-* attributes raise no WG01", () => {
+    expect(
+      codes(
+        validate(
+          SERVICES,
+          "## A",
+          "Text.",
+          ...block("service", { id: "a", title: "A", status: "live", "x-phase": "explore" }),
+          ...TEAM,
+        ),
+      ),
+    ).not.toContain("WG01@4");
+  });
+
   test("WG02 block without prose introduction", () => {
     expect(
       codes(

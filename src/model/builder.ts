@@ -50,6 +50,13 @@ export interface BuildOptions<S extends Readonly<Record<string, z.ZodType>>, N, 
   messages?: MessageMapper;
 }
 
+/** Attributes with this prefix are project-specific and pass through uninterpreted. */
+const EXTENSION_PREFIX = "x-";
+
+function isExtensionAttribute(name: string): boolean {
+  return name.startsWith(EXTENSION_PREFIX) && name.length > EXTENSION_PREFIX.length;
+}
+
 /** Sentinel block type the parser emits for a block it could not close. */
 const PARSE_ERROR_BLOCK = "__parse_error__";
 
@@ -154,9 +161,16 @@ export function buildWorkspace<
       // Normalise empty strings to undefined so Zod's optional() treats them
       // as absent (the DSL parser emits "" for `key:` with no value).
       // A list attribute (`key:` + `- item` lines) is its items.
+      // Attributes named `x-*` are project extensions: carried on the element
+      // as `extensions` (prefix dropped), never schema-checked or warned about.
       const normalised: Record<string, string | string[] | undefined> = {};
+      const extensions: Record<string, string | string[]> = {};
       for (const [key, value] of Object.entries(attributes)) {
         const items = node.lists?.[key];
+        if (isExtensionAttribute(key)) {
+          extensions[key.slice(EXTENSION_PREFIX.length)] = items ?? value.trim();
+          continue;
+        }
         normalised[key] = items ?? (keepEmpty.has(key) || value.trim() !== "" ? value : undefined);
       }
 
@@ -180,7 +194,7 @@ export function buildWorkspace<
       // can spot typos like `sevrity` without losing the element entirely.
       const known = Object.keys(shapeOf(schema as BlockSchema));
       for (const attribute of Object.keys(attributes)) {
-        if (!known.includes(attribute)) {
+        if (!known.includes(attribute) && !isExtensionAttribute(attribute)) {
           parseWarnings.push({
             message: message({ kind: "unknown-attribute", subject: blockType, attribute, known }),
             file,
@@ -189,7 +203,12 @@ export function buildWorkspace<
         }
       }
 
-      elements.push({ ...(result.data as object), kind: blockType, loc } as ElementOf<S>);
+      elements.push({
+        ...(result.data as object),
+        ...(Object.keys(extensions).length > 0 ? { extensions } : {}),
+        kind: blockType,
+        loc,
+      } as ElementOf<S>);
     }
   }
 
