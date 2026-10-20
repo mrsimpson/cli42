@@ -107,6 +107,34 @@ describe("buildWorkspace", () => {
     ]);
   });
 
+  test("carries x-* attributes as extensions without warning", () => {
+    const workspace = workspaceOf(
+      "## A",
+      ...block("service", { id: "a", title: "A", status: "live", "x-phase": "explore" }),
+    );
+    expect(workspace.parseWarnings).toEqual([]);
+    expect(workspace.parseErrors).toEqual([]);
+    expect(workspace.elements[0]).toMatchObject({ id: "a", extensions: { phase: "explore" } });
+    expect(workspace.elements[0]).not.toHaveProperty("x-phase");
+  });
+
+  test("a block without x-* attributes has no extensions field", () => {
+    const workspace = workspaceOf(
+      "## A",
+      ...block("service", { id: "a", title: "A", status: "live" }),
+    );
+    expect(workspace.elements[0]).not.toHaveProperty("extensions");
+  });
+
+  test("only the x- prefix is exempt: a misspelled attribute still warns", () => {
+    const workspace = workspaceOf(
+      "## A",
+      ...block("service", { id: "a", title: "A", status: "live", "x-phase": "code", sttus: "x" }),
+    );
+    expect(workspace.parseWarnings).toHaveLength(1);
+    expect(workspace.parseWarnings[0]?.message).toContain("Unknown attribute 'sttus'");
+  });
+
   test("reports an unclosed block with its start line", () => {
     const workspace = workspaceOf("## A", "```demo42", ":::service", "id: a", "```");
     expect(workspace.elements).toEqual([]);

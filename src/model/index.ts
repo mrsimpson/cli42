@@ -15,6 +15,7 @@ export type { BuildIssue, MessageMapper } from "./messages.ts";
 export type {
   BuiltWorkspace,
   ElementOf,
+  Extensions,
   ParseError,
   ParseWarning,
   SourceLocation,

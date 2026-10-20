@@ -44,7 +44,7 @@ two digits. They never collide with a language's own codes (`E002`, `W001`, …)
 | EG02 | Block cannot be built (unknown type, missing/invalid attribute, unclosed) |
 | EG03 | Element documented outside its canonical chapter                          |
 | EG04 | Block not placed under any heading                                        |
-| WG01 | Unknown attribute on a block                                              |
+| WG01 | Unknown attribute on a block (`x-*` attributes are exempt)                |
 | WG02 | Block without prose introduction in its section                           |
 | WG03 | More than one block under one heading                                     |
 | WG04 | Mermaid fence without `:::diagram` metadata                               |
@@ -52,6 +52,15 @@ two digits. They never collide with a language's own codes (`E002`, `W001`, …)
 | WG06 | Ignore directive that suppressed nothing                                  |
 | WG07 | Ignore directive that targets an error                                    |
 | WG08 | Element id that does not follow its kind's id scheme                      |
+
+### Extension attributes
+
+An attribute whose name starts with `x-` is a project extension on any block:
+it is not schema-checked and never raises WG01. The model carries it on the
+element as `extensions`, keyed by the name without the prefix
+(`x-phase: explore` becomes `extensions: { phase: "explore" }`); a list
+attribute (`x-tags:` with `- item` lines) is its array of items. Only the
+`x-` prefix is exempt, so a typo in a standard attribute is still WG01.
 
 A language adds the rules with its chapter map, file-name convention and fence,
 its schemas (for WG08), and its own docs fields:
